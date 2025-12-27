@@ -13,6 +13,7 @@ from app.models.schemas import (
 )
 from app.services.metagpt_service import metagpt_service
 from app.services.bedrock_client import bedrock_client
+from app.services.e2b_service import e2b_service
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -199,6 +200,93 @@ async def get_available_agent_roles():
         ]
     }
 
+@router.post("/e2b/sandbox/{generation_id}/create")
+async def create_e2b_sandbox(generation_id: str):
+    """
+    Create an E2B sandbox for a specific generation
+    """
+    try:
+        result = await e2b_service.create_sandbox(generation_id)
+        if result:
+            return {"status": "success", "sandbox_id": result}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create sandbox")
+    except Exception as e:
+        logger.error(f"Failed to create E2B sandbox: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create sandbox: {str(e)}")
+
+@router.post("/e2b/sandbox/{generation_id}/files")
+async def write_e2b_files(generation_id: str, artifacts: List[Dict[str, Any]]):
+    """
+    Write artifacts to the E2B sandbox
+    """
+    try:
+        success = await e2b_service.write_files(generation_id, artifacts)
+        if success:
+            return {"status": "success", "message": "Files written successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Sandbox not found")
+    except Exception as e:
+        logger.error(f"Failed to write files to E2B sandbox: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to write files: {str(e)}")
+
+@router.post("/e2b/sandbox/{generation_id}/run")
+async def run_e2b_application(generation_id: str):
+    """
+    Run the application in the E2B sandbox
+    """
+    try:
+        preview_url = await e2b_service.run_application(generation_id)
+        if preview_url:
+            return {"status": "success", "preview_url": preview_url}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to run application")
+    except Exception as e:
+        logger.error(f"Failed to run E2B application: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to run application: {str(e)}")
+
+@router.post("/e2b/sandbox/{generation_id}/stop")
+async def stop_e2b_application(generation_id: str):
+    """
+    Stop the running application in the E2B sandbox
+    """
+    try:
+        success = await e2b_service.stop_application(generation_id)
+        if success:
+            return {"status": "success", "message": "Application stopped successfully"}
+        else:
+            raise HTTPException(status_code=404, detail="Sandbox not found")
+    except Exception as e:
+        logger.error(f"Failed to stop E2B application: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to stop application: {str(e)}")
+
+@router.get("/e2b/sandbox/{generation_id}/logs")
+async def get_e2b_logs(generation_id: str):
+    """
+    Get logs from the E2B sandbox
+    """
+    try:
+        logs = await e2b_service.get_logs(generation_id)
+        return {"status": "success", "logs": logs}
+    except Exception as e:
+        logger.error(f"Failed to get E2B logs: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get logs: {str(e)}")
+
+@router.delete("/e2b/sandbox/{generation_id}")
+async def cleanup_e2b_sandbox(generation_id: str):
+    """
+    Clean up and close the E2B sandbox
+    """
+    try:
+        success = await e2b_service.cleanup_sandbox(generation_id)
+        if success:
+            return {"status": "success", "message": "Sandbox cleaned up successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to cleanup sandbox")
+    except Exception as e:
+        logger.error(f"Failed to cleanup E2B sandbox: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to cleanup sandbox: {str(e)}")
+
 @router.get("/health", response_model=HealthCheck)
 async def health_check():
     """
@@ -206,13 +294,17 @@ async def health_check():
     """
     # Check if Bedrock client is initialized
     bedrock_available = bedrock_client.client is not None
-    
+
     # Check MetaGPT configuration
     metagpt_configured = bool(settings.METAGPT_API_KEY)
-    
+
+    # Check E2B configuration
+    e2b_configured = bool(settings.E2B_API_KEY)
+
     return HealthCheck(
         status="healthy" if bedrock_available else "degraded",
         service="metagpt-bedrock-generator",
         aws_bedrock_available=bedrock_available,
-        metagpt_configured=metagpt_configured
+        metagpt_configured=metagpt_configured,
+        e2b_configured=e2b_configured
     )

@@ -23,12 +23,44 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: 'esbuild',
+    chunkSizeWarningLimit: 1000, // Increase limit to 1000kb
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['framer-motion', 'lucide-react']
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor'
+            }
+            if (id.includes('react-router')) {
+              return 'router'
+            }
+            if (id.includes('framer-motion') || id.includes('lucide-react')) {
+              return 'ui'
+            }
+            if (id.includes('axios')) {
+              return 'http'
+            }
+            if (id.includes('react-markdown') || id.includes('react-syntax-highlighter')) {
+              return 'markdown'
+            }
+            if (id.includes('react-hot-toast')) {
+              return 'notifications'
+            }
+            // Other vendor libraries
+            return 'vendor'
+          }
+
+          // Application chunks
+          if (id.includes('src/pages/')) {
+            return 'pages'
+          }
+          if (id.includes('src/components/')) {
+            return 'components'
+          }
+          if (id.includes('src/services/')) {
+            return 'services'
+          }
         }
       }
     }

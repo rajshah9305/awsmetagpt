@@ -12,6 +12,9 @@ botocore==1.35.84
 # WebSocket support
 websockets==13.1
 
+# E2B Sandbox
+e2b>=1.0.0
+
 # Utilities
 python-dotenv==1.0.1
 aiofiles==24.1.0

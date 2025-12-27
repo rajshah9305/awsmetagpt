@@ -11,9 +11,9 @@
     "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix"
   },
   "dependencies": {
-    "@e2b/code-interpreter": "^2.3.3",
     "axios": "^1.7.0",
     "framer-motion": "^11.0.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.400.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

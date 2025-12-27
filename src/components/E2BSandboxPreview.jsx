@@ -1,30 +1,65 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Play, Square, RotateCcw, ExternalLink, Download, 
+import {
+  Play, Square, RotateCcw, ExternalLink, Download,
   Terminal, Globe, Code, FileText, Loader, AlertCircle,
   CheckCircle, Maximize2, Minimize2, Info
 } from 'lucide-react'
+import JSZip from 'jszip'
+import toast from 'react-hot-toast'
 
-// Get E2B API key safely
-const getE2BApiKey = () => {
-  try {
-    return import.meta.env.VITE_E2B_API_KEY || 
-           (typeof process !== 'undefined' && process.env?.REACT_APP_E2B_API_KEY) ||
-           (typeof window !== 'undefined' && window.ENV?.E2B_API_KEY)
-  } catch (err) {
-    console.warn('Could not access environment variables:', err)
-    return null
-  }
+import { healthCheck } from '../services/api'
+
+// E2B Sandbox API functions
+const createSandbox = async (generationId) => {
+  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}/create`, {
+    method: 'POST',
+  })
+  return response.json()
 }
 
-const E2BSandboxPreview = ({ 
-  artifacts = [], 
+const writeFiles = async (generationId, artifacts) => {
+  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}/files`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(artifacts),
+  })
+  return response.json()
+}
+
+const runApplication = async (generationId) => {
+  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}/run`, {
+    method: 'POST',
+  })
+  return response.json()
+}
+
+const stopApplication = async (generationId) => {
+  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}/stop`, {
+    method: 'POST',
+  })
+  return response.json()
+}
+
+const getLogs = async (generationId) => {
+  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}/logs`)
+  return response.json()
+}
+
+const cleanupSandbox = async (generationId) => {
+  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}`, {
+    method: 'DELETE',
+  })
+  return response.json()
+}
+
+const E2BSandboxPreview = ({
+  artifacts = [],
   generationId,
   onSandboxReady,
-  onPreviewUpdate 
+  onPreviewUpdate
 }) => {
-  const [sandbox, setSandbox] = useState(null)
+  const [sandboxReady, setSandboxReady] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isRunning, setIsRunning] = useState(false)
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -32,8 +67,9 @@ const E2BSandboxPreview = ({
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('preview')
   const [isExpanded, setIsExpanded] = useState(false)
-  const [filesCreated, setFilesCreated] = useState([])
-  
+  const [filesCreated, setFilesCreated] = useState(false)
+  const [e2bConfigured, setE2bConfigured] = useState(false)
+
   const iframeRef = useRef(null)
   const logsRef = useRef(null)
 
@@ -44,36 +80,55 @@ const E2BSandboxPreview = ({
     }
   }, [logs])
 
+  // Check E2B configuration on mount
+  useEffect(() => {
+    const checkConfiguration = async () => {
+      try {
+        const health = await healthCheck()
+        setE2bConfigured(health.e2b_configured || false)
+      } catch (err) {
+        console.warn('Could not check E2B configuration:', err)
+        setE2bConfigured(false)
+      }
+    }
+    checkConfiguration()
+  }, [])
+
+  // Add log entry
+  const addLog = (message) => {
+    const timestamp = new Date().toLocaleTimeString()
+    setLogs(prev => [...prev, `[${timestamp}] ${message}`])
+  }
+
   // Initialize E2B sandbox
   const initializeSandbox = async () => {
-    const apiKey = getE2BApiKey()
-    
-    if (!apiKey) {
-      setError('E2B API key not configured. Please set VITE_E2B_API_KEY in your environment.')
+    if (!e2bConfigured) {
+      setError('E2B is not configured. Please set E2B_API_KEY in your environment.')
       return
     }
 
     setIsLoading(true)
     setError(null)
-    
+
     try {
-      // Import E2B dynamically
-      const { CodeInterpreter } = await import('@e2b/code-interpreter')
-      
-      const newSandbox = await CodeInterpreter.create({
-        apiKey: apiKey,
-        metadata: {
-          generationId: generationId
+      addLog('🔧 Initializing E2B sandbox...')
+      const result = await createSandbox(generationId)
+
+      if (result.status === 'success') {
+        setSandboxReady(true)
+        addLog('✅ E2B sandbox initialized successfully')
+
+        if (onSandboxReady) {
+          onSandboxReady(generationId)
         }
-      })
-      
-      setSandbox(newSandbox)
-      addLog('✅ E2B sandbox initialized successfully')
-      
-      if (onSandboxReady) {
-        onSandboxReady(newSandbox)
+
+        // Auto-write files if artifacts are available
+        if (artifacts.length > 0) {
+          await createFiles()
+        }
+      } else {
+        throw new Error(result.detail || 'Failed to create sandbox')
       }
-      
     } catch (err) {
       console.error('Failed to initialize E2B sandbox:', err)
       setError(`Failed to initialize sandbox: ${err.message}`)
@@ -83,97 +138,52 @@ const E2BSandboxPreview = ({
     }
   }
 
-  // Add log entry
-  const addLog = (message) => {
-    const timestamp = new Date().toLocaleTimeString()
-    setLogs(prev => [...prev, `[${timestamp}] ${message}`])
-  }
-
   // Create files from artifacts
   const createFiles = async () => {
-    if (!sandbox || artifacts.length === 0) return
+    if (!sandboxReady || artifacts.length === 0) return
 
     setIsLoading(true)
-    addLog('📁 Creating files from generated artifacts...')
-    
+    addLog('📁 Writing files to sandbox...')
+
     try {
-      const createdFiles = []
-      
-      for (const artifact of artifacts) {
-        const filename = getFilenameFromArtifact(artifact)
-        
-        await sandbox.files.write(filename, artifact.content)
-        createdFiles.push(filename)
-        addLog(`📄 Created: ${filename}`)
+      const result = await writeFiles(generationId, artifacts)
+
+      if (result.status === 'success') {
+        setFilesCreated(true)
+        addLog(`✅ Successfully wrote ${artifacts.length} files to sandbox`)
+      } else {
+        throw new Error(result.detail || 'Failed to write files')
       }
-      
-      setFilesCreated(createdFiles)
-      addLog(`✅ Created ${createdFiles.length} files successfully`)
-      
     } catch (err) {
-      console.error('Failed to create files:', err)
-      setError(`Failed to create files: ${err.message}`)
+      console.error('Failed to write files:', err)
+      setError(`Failed to write files: ${err.message}`)
       addLog(`❌ File creation failed: ${err.message}`)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Get appropriate filename from artifact
-  const getFilenameFromArtifact = (artifact) => {
-    const name = artifact.name.toLowerCase().replace(/\s+/g, '_')
-    
-    // Map artifact types to file extensions
-    const extensionMap = {
-      'product requirements document': 'requirements.md',
-      'system architecture design': 'architecture.md',
-      'project plan & timeline': 'project_plan.md',
-      'technical implementation': 'implementation.md',
-      'test strategy & cases': 'test_strategy.md',
-      'deployment & infrastructure': 'deployment.md'
-    }
-    
-    return extensionMap[artifact.name.toLowerCase()] || `${name}.md`
-  }
-
   // Run the generated application
-  const runApplication = async () => {
-    if (!sandbox || filesCreated.length === 0) return
+  const handleRunApplication = async () => {
+    if (!sandboxReady || !filesCreated) return
 
     setIsRunning(true)
     setError(null)
     addLog('🚀 Starting application...')
-    
+
     try {
-      // For now, create a simple documentation viewer
-      const streamlitCode = `
-import streamlit as st
+      const result = await runApplication(generationId)
 
-st.title("🚀 Generated Application Documentation")
-st.write("This application was generated by AI agents!")
+      if (result.status === 'success' && result.preview_url) {
+        setPreviewUrl(result.preview_url)
+        addLog(`✅ Application running at: ${result.preview_url}`)
 
-# Display generated artifacts
-st.header("Generated Documentation")
-${artifacts.map(artifact => `
-st.subheader("${artifact.name}")
-st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
-`).join('\n')}
-`
-      
-      await sandbox.files.write('streamlit_app.py', streamlitCode)
-      await sandbox.commands.run('pip install streamlit')
-      await sandbox.commands.run('streamlit run streamlit_app.py --server.port 8501 &')
-      
-      const hostname = await sandbox.getHostname(8501)
-      const url = `https://${hostname}`
-      setPreviewUrl(url)
-      
-      addLog(`✅ Documentation viewer running at: ${url}`)
-      
-      if (onPreviewUpdate) {
-        onPreviewUpdate({ type: 'documentation', url })
+        if (onPreviewUpdate) {
+          onPreviewUpdate({ type: 'application', url: result.preview_url })
+        }
+      } else {
+        throw new Error(result.detail || 'Failed to run application')
       }
-      
     } catch (err) {
       console.error('Failed to run application:', err)
       setError(`Failed to run application: ${err.message}`)
@@ -184,37 +194,65 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
   }
 
   // Stop the application
-  const stopApplication = () => {
+  const handleStopApplication = async () => {
+    if (!sandboxReady) return
+
     setIsRunning(false)
-    setPreviewUrl(null)
-    addLog('🛑 Application stopped')
+    addLog('🛑 Stopping application...')
+
+    try {
+      const result = await stopApplication(generationId)
+
+      if (result.status === 'success') {
+        setPreviewUrl(null)
+        addLog('✅ Application stopped successfully')
+      } else {
+        addLog('⚠️ Application may still be running')
+      }
+    } catch (err) {
+      console.error('Failed to stop application:', err)
+      addLog(`❌ Failed to stop application: ${err.message}`)
+    }
   }
 
   // Restart the application
-  const restartApplication = async () => {
-    stopApplication()
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    await runApplication()
+  const handleRestartApplication = async () => {
+    await handleStopApplication()
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    await handleRunApplication()
+  }
+
+  // Refresh logs
+  const refreshLogs = async () => {
+    if (!sandboxReady) return
+
+    try {
+      const result = await getLogs(generationId)
+      if (result.status === 'success') {
+        setLogs(result.logs.map(log => `[${new Date().toLocaleTimeString()}] ${log}`))
+      }
+    } catch (err) {
+      console.error('Failed to refresh logs:', err)
+    }
   }
 
   // Download generated files
   const downloadFiles = async () => {
-    if (filesCreated.length === 0) return
+    if (artifacts.length === 0) return
 
     addLog('📥 Preparing files for download...')
-    
+
     try {
-      // Create a simple download of all artifacts
       const zip = new JSZip()
-      
-      artifacts.forEach((artifact, index) => {
+
+      artifacts.forEach((artifact) => {
         const filename = getFilenameFromArtifact(artifact)
         zip.file(filename, artifact.content)
       })
-      
+
       const blob = await zip.generateAsync({ type: 'blob' })
       const url = URL.createObjectURL(blob)
-      
+
       const a = document.createElement('a')
       a.href = url
       a.download = `generated-app-${generationId}.zip`
@@ -222,21 +260,39 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-      
+
       addLog('✅ Files downloaded successfully')
-      
+      toast.success('Files downloaded successfully')
+
     } catch (err) {
       console.error('Failed to download files:', err)
       addLog(`❌ Download failed: ${err.message}`)
+      toast.error('Failed to download files')
     }
   }
 
-  // Auto-create files when artifacts are available
-  useEffect(() => {
-    if (sandbox && artifacts.length > 0 && filesCreated.length === 0) {
-      createFiles()
+  // Get appropriate filename from artifact
+  const getFilenameFromArtifact = (artifact) => {
+    const name = artifact.name.toLowerCase().replace(/\s+/g, '_')
+
+    const extensionMap = {
+      'product requirements document': 'requirements.md',
+      'system architecture design': 'architecture.md',
+      'project plan & timeline': 'project_plan.md',
+      'technical implementation': 'implementation.md',
+      'test strategy & cases': 'test_strategy.md',
+      'deployment & infrastructure': 'deployment.md'
     }
-  }, [sandbox, artifacts])
+
+    return extensionMap[artifact.name.toLowerCase()] || `${name}.md`
+  }
+
+  // Auto-initialize sandbox when artifacts are available
+  useEffect(() => {
+    if (artifacts.length > 0 && !sandboxReady && e2bConfigured) {
+      initializeSandbox()
+    }
+  }, [artifacts, sandboxReady, e2bConfigured])
 
   if (!artifacts || artifacts.length === 0) {
     return (
@@ -276,38 +332,38 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
         
         <div className="flex items-center space-x-2">
           {/* Control Buttons */}
-          {sandbox && (
+          {sandboxReady && (
             <>
               <button
-                onClick={runApplication}
-                disabled={isLoading || isRunning}
+                onClick={handleRunApplication}
+                disabled={isLoading || isRunning || !filesCreated}
                 className="btn-outline p-2"
                 title="Run Application"
               >
                 <Play className="h-4 w-4" />
               </button>
-              
+
               <button
-                onClick={stopApplication}
-                disabled={!isRunning}
+                onClick={handleStopApplication}
+                disabled={isLoading || !isRunning}
                 className="btn-outline p-2"
                 title="Stop Application"
               >
                 <Square className="h-4 w-4" />
               </button>
-              
+
               <button
-                onClick={restartApplication}
+                onClick={handleRestartApplication}
                 disabled={isLoading}
                 className="btn-outline p-2"
                 title="Restart Application"
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
-              
+
               <button
                 onClick={downloadFiles}
-                disabled={filesCreated.length === 0}
+                disabled={artifacts.length === 0}
                 className="btn-outline p-2"
                 title="Download Files"
               >
@@ -400,8 +456,8 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
                 title="Application Preview"
               />
             )}
-            
-            {!previewUrl && !isLoading && sandbox && (
+
+            {!previewUrl && !isLoading && sandboxReady && filesCreated && (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center">
                   <Play className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -412,7 +468,7 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
                     Click the play button to start your application
                   </p>
                   <button
-                    onClick={runApplication}
+                    onClick={handleRunApplication}
                     disabled={isRunning}
                     className="btn-primary"
                   >
@@ -422,8 +478,8 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
                 </div>
               </div>
             )}
-            
-            {!sandbox && !isLoading && (
+
+            {!sandboxReady && !isLoading && (
               <div className="h-full flex items-center justify-center">
                 <div className="text-center">
                   <Info className="h-12 w-12 text-blue-400 mx-auto mb-4" />
@@ -447,44 +503,65 @@ st.markdown("""${artifact.content.replace(/"/g, '\\"')}""")
 
         {/* Logs Tab */}
         {activeTab === 'logs' && (
-          <div
-            ref={logsRef}
-            className="h-full p-4 bg-gray-900 text-green-400 font-mono text-sm overflow-y-auto"
-          >
-            {logs.length === 0 ? (
-              <div className="text-gray-500">No logs yet...</div>
-            ) : (
-              logs.map((log, index) => (
-                <div key={index} className="mb-1">
-                  {log}
-                </div>
-              ))
-            )}
+          <div className="h-full flex flex-col">
+            <div className="p-2 border-b border-gray-200 flex justify-between items-center">
+              <span className="text-sm text-gray-600">Sandbox Logs</span>
+              <button
+                onClick={refreshLogs}
+                disabled={!sandboxReady}
+                className="btn-outline p-1 text-xs"
+                title="Refresh Logs"
+              >
+                <RotateCcw className="h-3 w-3" />
+              </button>
+            </div>
+            <div
+              ref={logsRef}
+              className="flex-1 p-4 bg-gray-900 text-green-400 font-mono text-sm overflow-y-auto"
+            >
+              {logs.length === 0 ? (
+                <div className="text-gray-500">No logs yet...</div>
+              ) : (
+                logs.map((log, index) => (
+                  <div key={index} className="mb-1">
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         )}
 
         {/* Files Tab */}
         {activeTab === 'files' && (
           <div className="h-full p-4 overflow-y-auto">
-            {filesCreated.length === 0 ? (
+            {!filesCreated ? (
               <div className="text-center text-gray-500 mt-8">
                 <FileText className="h-8 w-8 mx-auto mb-2" />
-                <p>No files created yet</p>
+                <p>Files not uploaded to sandbox yet</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {filesCreated.map((filename, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center space-x-2 p-2 rounded-lg border border-gray-200"
-                  >
-                    <FileText className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-900">
-                      {filename}
-                    </span>
-                    <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
-                  </div>
-                ))}
+                {artifacts.map((artifact, index) => {
+                  const filename = getFilenameFromArtifact(artifact)
+                  return (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
+                    >
+                      <FileText className="h-4 w-4 text-gray-500" />
+                      <div className="flex-1">
+                        <span className="text-sm font-medium text-gray-900">
+                          {filename}
+                        </span>
+                        <p className="text-xs text-gray-500 truncate">
+                          {artifact.name}
+                        </p>
+                      </div>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

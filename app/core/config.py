@@ -31,9 +31,16 @@ class Settings(BaseSettings):
     # MetaGPT Configuration (Optional - can work without)
     METAGPT_API_KEY: str = ""
     METAGPT_MODEL: str = "claude-sonnet-4"
-    
-    # Frontend
+
+    # E2B Configuration (for live code preview)
+    E2B_API_KEY: str = ""
+    VITE_E2B_API_KEY: str = ""
+
+    # Frontend Configuration
     FRONTEND_URL: str = "http://localhost:3000"
+    VITE_API_URL: str = "http://localhost:8000"
+    VITE_APP_NAME: str = "MetaGPT + Bedrock Generator"
+    VITE_APP_VERSION: str = "1.0.0"
     
     class Config:
         env_file = ".env"
