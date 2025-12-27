@@ -3,7 +3,7 @@ API routes for the MetaGPT + Bedrock app generator
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from typing import List, Optional
+from typing import List, Dict, Any, Optional
 import uuid
 import logging
 
