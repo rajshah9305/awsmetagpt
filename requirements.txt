@@ -1,0 +1,18 @@
+# Core dependencies
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.7.0
+python-multipart==0.0.12
+
+# AWS Bedrock and AI
+boto3==1.35.84
+botocore==1.35.84
+
+# WebSocket support
+websockets==13.1
+
+# Utilities
+python-dotenv==1.0.1
+aiofiles==24.1.0
+httpx==0.28.1
