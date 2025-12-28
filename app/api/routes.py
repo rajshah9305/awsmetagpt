@@ -10,6 +10,7 @@ import uuid
 import logging
 from datetime import datetime, timedelta
 import asyncio
+import os
 
 from app.models.schemas import (
     GenerationRequest, GenerationResponse,
@@ -88,8 +89,19 @@ async def generate_app(request: GenerationRequest, background_tasks: BackgroundT
         
         # Construct WebSocket URL based on environment
         ws_protocol = "wss" if not settings.DEBUG else "ws"
-        ws_host = "localhost" if settings.DEBUG else "your-domain.com"
-        ws_port = f":{settings.APP_PORT}" if settings.DEBUG else ""
+        
+        # Use Railway's public domain if available, otherwise localhost
+        railway_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+        if settings.DEBUG:
+            ws_host = "localhost"
+            ws_port = f":{settings.APP_PORT}"
+        elif railway_domain:
+            ws_host = railway_domain
+            ws_port = ""
+        else:
+            ws_host = os.getenv("APP_DOMAIN", "localhost")
+            ws_port = ""
+        
         websocket_url = f"{ws_protocol}://{ws_host}{ws_port}/ws/{client_id}"
         
         return GenerationResponse(

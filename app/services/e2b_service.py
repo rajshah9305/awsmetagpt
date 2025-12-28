@@ -76,13 +76,15 @@ class E2BService:
             "react": "react18",
             "nextjs": "nextjs13"
         }
-        self._setup_monitoring()
+        self._monitoring_started = False
 
     
     def _setup_monitoring(self):
-        """Setup sandbox monitoring and cleanup tasks"""
-        asyncio.create_task(self._monitor_sandboxes())
-        asyncio.create_task(self._cleanup_inactive_sandboxes())
+        """Setup sandbox monitoring and cleanup tasks (called when event loop is available)"""
+        if not self._monitoring_started:
+            asyncio.create_task(self._monitor_sandboxes())
+            asyncio.create_task(self._cleanup_inactive_sandboxes())
+            self._monitoring_started = True
     
     async def _monitor_sandboxes(self):
         """Monitor sandbox health and processes"""
@@ -194,6 +196,12 @@ class E2BService:
 
         except Exception as e:
             logger.error(f"Failed to create E2B sandbox: {e}")
+            # Cleanup any partial sandbox creation
+            if session_id in self.active_sandboxes:
+                try:
+                    await self.cleanup_sandbox(session_id)
+                except Exception as cleanup_error:
+                    logger.error(f"Failed to cleanup partial sandbox: {cleanup_error}")
             return None
     
     async def _initialize_sandbox_environment(self, sandbox_info: SandboxInfo):

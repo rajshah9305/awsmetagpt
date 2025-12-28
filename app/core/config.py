@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings
 from pydantic import Field, validator
 from typing import Optional, List
 import os
+import secrets
 
 class Settings(BaseSettings):
     """Enhanced application settings with comprehensive configuration"""
@@ -18,7 +19,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
     
     # Security Settings
-    SECRET_KEY: str = Field(default="", description="Application secret key")
+    SECRET_KEY: str = Field(
+        default_factory=lambda: secrets.token_urlsafe(32) if not os.getenv("SECRET_KEY") else os.getenv("SECRET_KEY", ""),
+        description="Application secret key"
+    )
     CORS_ORIGINS: List[str] = Field(default=["*"], description="CORS allowed origins")
     MAX_REQUEST_SIZE: int = Field(default=50 * 1024 * 1024, description="Max request size in bytes (50MB)")
     
@@ -30,6 +34,7 @@ class Settings(BaseSettings):
     
     # Bedrock Configuration
     BEDROCK_REGION: str = Field(default="us-east-1", description="Bedrock service region")
+    BEDROCK_MODEL: str = Field(default="anthropic.claude-sonnet-4-20250514-v1:0", description="Bedrock model ID")
     BEDROCK_MAX_TOKENS: int = Field(default=4000, ge=100, le=100000, description="Max tokens per request")
     BEDROCK_TEMPERATURE: float = Field(default=0.7, ge=0.0, le=2.0, description="Model temperature")
     BEDROCK_TIMEOUT: int = Field(default=300, ge=30, le=600, description="Bedrock request timeout in seconds")
@@ -178,13 +183,9 @@ class Settings(BaseSettings):
         """Validate required configuration keys"""
         missing_keys = []
         
-        # Check AWS credentials
+        # Check AWS credentials (required for Bedrock agents)
         if self.ENABLE_BEDROCK and not (self.AWS_ACCESS_KEY_ID and self.AWS_SECRET_ACCESS_KEY):
             missing_keys.append("AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)")
-        
-        # Check MetaGPT API keys
-        if not (self.OPENAI_API_KEY or self.ANTHROPIC_API_KEY):
-            missing_keys.append("AI API key (OPENAI_API_KEY or ANTHROPIC_API_KEY)")
         
         # Check E2B API key
         if self.ENABLE_E2B and not self.E2B_API_KEY:

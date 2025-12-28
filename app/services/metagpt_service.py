@@ -1,5 +1,5 @@
 """
-MetaGPT service for multi-agent app generation
+MetaGPT service for multi-agent app generation using AWS Bedrock
 """
 
 import asyncio
@@ -11,9 +11,11 @@ from typing import Dict, List, Optional
 import logging
 from datetime import datetime
 from pathlib import Path
+import json
+import yaml
 
 from app.models.schemas import (
-    GenerationRequest, AgentRole, GeneratedArtifact
+    GenerationRequest, AgentRole, GeneratedArtifact, BedrockModel
 )
 from app.services.websocket_manager import websocket_manager
 from app.core.config import settings
@@ -21,22 +23,36 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 class MetaGPTService:
-    """Service for orchestrating real MetaGPT agents"""
+    """Service for orchestrating real MetaGPT agents with AWS Bedrock"""
     
     def __init__(self):
         self.active_generations: Dict[str, Dict] = {}
-        self._setup_metagpt()
+        self._setup_metagpt_bedrock()
     
-    def _setup_metagpt(self):
-        """Initialize MetaGPT configuration"""
+    def _setup_metagpt_bedrock(self):
+        """Initialize MetaGPT with Bedrock configuration"""
         try:
-            # Set up MetaGPT environment variables
-            if settings.OPENAI_API_KEY:
-                os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
-            if settings.ANTHROPIC_API_KEY:
-                os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
-            if settings.METAGPT_API_KEY:
-                os.environ["METAGPT_API_KEY"] = settings.METAGPT_API_KEY
+            # Create MetaGPT config directory
+            config_dir = Path.home() / ".metagpt"
+            config_dir.mkdir(exist_ok=True)
+            
+            # Create Bedrock configuration for MetaGPT
+            bedrock_config = {
+                "llm": {
+                    "api_type": "bedrock",
+                    "model": settings.BEDROCK_MODEL,  # Use model from settings
+                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                    "aws_region": settings.AWS_REGION,
+                    "max_tokens": settings.BEDROCK_MAX_TOKENS,
+                    "temperature": settings.BEDROCK_TEMPERATURE
+                }
+            }
+            
+            # Write MetaGPT config file
+            config_file = config_dir / "config2.yaml"
+            with open(config_file, 'w') as f:
+                yaml.dump(bedrock_config, f, default_flow_style=False)
             
             # Set workspace
             os.environ["METAGPT_WORKSPACE"] = settings.METAGPT_WORKSPACE
@@ -46,17 +62,54 @@ class MetaGPTService:
             workspace_path = Path(settings.METAGPT_WORKSPACE)
             workspace_path.mkdir(parents=True, exist_ok=True)
             
-            logger.info("✅ MetaGPT configuration initialized")
+            logger.info(f"✅ MetaGPT configured with AWS Bedrock using model: {settings.BEDROCK_MODEL}")
             
         except Exception as e:
-            logger.error(f"Failed to setup MetaGPT: {e}")
+            logger.error(f"Failed to setup MetaGPT with Bedrock: {e}")
+    
+    def _update_metagpt_model(self, preferred_model: BedrockModel):
+        """Update MetaGPT configuration with preferred Bedrock model"""
+        try:
+            config_dir = Path.home() / ".metagpt"
+            config_file = config_dir / "config2.yaml"
+            
+            # Map BedrockModel to MetaGPT model names
+            model_mapping = {
+                BedrockModel.NOVA_PRO: "us.amazon.nova-pro-v1:0",
+                BedrockModel.NOVA_LITE: "us.amazon.nova-lite-v1:0", 
+                BedrockModel.NOVA_MICRO: "us.amazon.nova-micro-v1:0",
+                BedrockModel.CLAUDE_SONNET_4: "us.anthropic.claude-sonnet-4-20250514-v1:0",
+                BedrockModel.LLAMA_3_3_70B: "us.meta.llama3-3-70b-instruct-v1:0",
+                BedrockModel.LLAMA_3_2_90B: "us.meta.llama3-2-90b-instruct-v1:0"
+            }
+            
+            metagpt_model = model_mapping.get(preferred_model, "anthropic.claude-3-sonnet-20240229-v1:0")
+            
+            # Update config
+            bedrock_config = {
+                "llm": {
+                    "api_type": "bedrock",
+                    "model": metagpt_model,
+                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                    "aws_region": settings.AWS_REGION
+                }
+            }
+            
+            with open(config_file, 'w') as f:
+                yaml.dump(bedrock_config, f, default_flow_style=False)
+                
+            logger.info(f"✅ Updated MetaGPT to use Bedrock model: {metagpt_model}")
+            
+        except Exception as e:
+            logger.error(f"Failed to update MetaGPT model: {e}")
     
     async def generate_app(
         self, 
         request: GenerationRequest, 
         client_id: Optional[str] = None
     ) -> str:
-        """Start app generation process using real MetaGPT"""
+        """Start app generation process using real MetaGPT with Bedrock"""
         generation_id = str(uuid.uuid4())
         
         # Store generation info
@@ -76,14 +129,17 @@ class MetaGPTService:
         return generation_id
     
     async def _run_metagpt_generation(self, generation_id: str):
-        """Run the complete generation process using MetaGPT"""
+        """Run the complete generation process using MetaGPT with Bedrock"""
         try:
             generation_data = self.active_generations[generation_id]
             request = generation_data["request"]
             client_id = generation_data.get("client_id")
             
             # Update status
-            await self._update_progress(generation_id, "initializing", 5, "Initializing MetaGPT...")
+            await self._update_progress(generation_id, "initializing", 5, "Initializing MetaGPT with Bedrock...")
+            
+            # Update MetaGPT model configuration
+            self._update_metagpt_model(request.preferred_model)
             
             # Import MetaGPT components
             from metagpt.software_company import SoftwareCompany
@@ -115,20 +171,17 @@ class MetaGPTService:
             company = SoftwareCompany()
             company.hire(team_roles)
             
-            await self._update_progress(generation_id, "running", 20, "Starting MetaGPT generation...")
+            await self._update_progress(generation_id, "running", 20, "Starting MetaGPT generation with Bedrock...")
             
             # Send real-time updates
             if client_id:
-                await websocket_manager.send_message(
-                    client_id,
-                    {
-                        "type": "agent_update",
-                        "agent": "metagpt_orchestrator",
-                        "status": "running",
-                        "message": f"Running MetaGPT with {len(team_roles)} agents",
-                        "progress": 25
-                    }
-                )
+                await websocket_manager.send_structured_message({
+                    "type": "agent_update",
+                    "agent": "metagpt_orchestrator",
+                    "status": "running",
+                    "message": f"Running MetaGPT with {len(team_roles)} agents using {request.preferred_model.value}",
+                    "progress": 25
+                }, client_id)
             
             # Run MetaGPT generation
             await self._run_metagpt_company(company, request, generation_id, workspace_path)
@@ -150,7 +203,7 @@ class MetaGPTService:
                 logger.error(f"Cleanup failed for {generation_id}: {cleanup_error}")
     
     async def _run_metagpt_company(self, company, request: GenerationRequest, generation_id: str, workspace_path: Path):
-        """Run the MetaGPT software company"""
+        """Run the MetaGPT software company with Bedrock"""
         try:
             client_id = self.active_generations[generation_id].get("client_id")
             
@@ -165,7 +218,7 @@ class MetaGPTService:
             # Run the company with the requirement in executor to avoid blocking
             def run_metagpt_sync():
                 try:
-                    # This is the actual MetaGPT execution
+                    # This is the actual MetaGPT execution with Bedrock
                     return company.run_project(enhanced_requirement)
                 except Exception as e:
                     logger.error(f"MetaGPT execution error: {e}")
@@ -214,6 +267,7 @@ Project Requirement: {request.requirement}
 
 Application Type: {request.app_type.value}
 Target Technology Stack: {', '.join(request.tech_stack) if request.tech_stack else 'Modern web technologies'}
+AI Model: {request.preferred_model.value} (AWS Bedrock)
 
 Additional Context:
 - Create a complete, production-ready application
@@ -221,6 +275,7 @@ Additional Context:
 - Follow best practices for the chosen technology stack
 - Generate comprehensive documentation
 - Include testing strategies where applicable
+- Consider scalability and maintainability
 
 Please create a full application that meets these requirements with proper architecture and implementation.
 """

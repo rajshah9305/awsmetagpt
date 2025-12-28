@@ -78,6 +78,10 @@ async def lifespan(app: FastAPI):
         # Start background tasks
         asyncio.create_task(system_monitor())
         asyncio.create_task(cleanup_task())
+        asyncio.create_task(websocket_manager.cleanup_stale_connections())
+        
+        # Setup E2B monitoring
+        e2b_service._setup_monitoring()
         
         logger.info("✅ System initialization complete")
         
@@ -379,10 +383,16 @@ if __name__ == "__main__":
     import uvicorn
     
     # Enhanced uvicorn configuration
+    try:
+        port = int(os.getenv("PORT", settings.APP_PORT))
+    except (ValueError, TypeError):
+        logger.warning(f"Invalid PORT environment variable, using default: {settings.APP_PORT}")
+        port = settings.APP_PORT
+    
     uvicorn_config = {
         "app": "main:app",
         "host": settings.APP_HOST,
-        "port": settings.APP_PORT,
+        "port": port,
         "reload": settings.RELOAD_ON_CHANGE and settings.DEBUG,
         "log_level": settings.LOG_LEVEL.lower(),
         "access_log": True,
@@ -397,5 +407,5 @@ if __name__ == "__main__":
             "http": "httptools"
         })
     
-    logger.info(f"🚀 Starting server on {settings.APP_HOST}:{settings.APP_PORT}")
+    logger.info(f"🚀 Starting server on {settings.APP_HOST}:{port}")
     uvicorn.run(**uvicorn_config)

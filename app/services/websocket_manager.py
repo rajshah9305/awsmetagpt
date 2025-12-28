@@ -6,7 +6,8 @@ from fastapi import WebSocket
 from typing import Dict, List, Optional, Any
 import json
 import logging
-from datetime import datetime
+import asyncio
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +209,27 @@ class WebSocketManager:
     def get_client_info(self, client_id: str) -> Optional[Dict]:
         """Get client connection info"""
         return self.client_data.get(client_id)
+    
+    async def cleanup_stale_connections(self):
+        """Remove stale connections periodically"""
+        while True:
+            try:
+                await asyncio.sleep(300)  # Check every 5 minutes
+                
+                stale_clients = []
+                cutoff_time = datetime.now() - timedelta(minutes=10)
+                
+                for client_id, data in self.client_data.items():
+                    if data.get('last_heartbeat', data['connected_at']) < cutoff_time:
+                        stale_clients.append(client_id)
+                
+                for client_id in stale_clients:
+                    logger.info(f"Cleaning up stale WebSocket connection: {client_id}")
+                    self.disconnect(client_id)
+                    
+            except Exception as e:
+                logger.error(f"Error in WebSocket cleanup: {e}")
+                await asyncio.sleep(60)
 
 # Global instance
 websocket_manager = WebSocketManager()

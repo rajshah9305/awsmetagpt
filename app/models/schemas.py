@@ -26,7 +26,7 @@ class BedrockModel(str, Enum):
     LLAMA_33_70B = "us.meta.llama3-3-70b-instruct-v1:0"
     LLAMA_32_90B = "us.meta.llama3-2-90b-instruct-v1:0"
     LLAMA_32_11B = "us.meta.llama3-2-11b-instruct-v1:0"
-    # Claude models (require approval)
+    # Claude models (using inference profiles)
     CLAUDE_SONNET_4 = "us.anthropic.claude-sonnet-4-20250514-v1:0"
     CLAUDE_HAIKU_45 = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
     CLAUDE_OPUS_4 = "us.anthropic.claude-opus-4-20250514-v1:0"
@@ -59,7 +59,7 @@ class GenerationRequest(BaseModel):
         description="Type of application to generate"
     )
     preferred_model: BedrockModel = Field(
-        default=BedrockModel.NOVA_PRO, 
+        default=BedrockModel.CLAUDE_SONNET_4, 
         description="Preferred Bedrock model"
     )
     active_agents: List[AgentRole] = Field(
@@ -253,7 +253,7 @@ class AgentConfig(BaseModel):
 class GenerationConfig(BaseModel):
     """Generation configuration model"""
     agents: List[AgentConfig]
-    model: BedrockModel = BedrockModel.NOVA_PRO
+    model: BedrockModel = BedrockModel.CLAUDE_SONNET_4
     timeout_minutes: int = Field(default=30, ge=5, le=120)
     max_artifacts: int = Field(default=100, ge=1, le=500)
     enable_e2b: bool = True
