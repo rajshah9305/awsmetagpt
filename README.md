@@ -2,7 +2,7 @@
 
 A powerful application generator that combines MetaGPT multi-agent framework with E2B sandbox for live code execution and preview.
 
-## 🚀 Features
+## Features
 
 - **Multi-Agent Generation**: Real MetaGPT agents working together
 - **Live Code Execution**: E2B sandboxes for instant preview
@@ -11,7 +11,7 @@ A powerful application generator that combines MetaGPT multi-agent framework wit
 - **Complete Applications**: Full-stack code generation
 - **Interactive Preview**: Live application testing
 
-## 🏗️ Architecture
+## Architecture
 
 ### Core Components
 
@@ -35,7 +35,7 @@ A powerful application generator that combines MetaGPT multi-agent framework wit
    - Async model invocation
    - Error handling and retries
 
-## 🛠️ Setup
+## Setup
 
 ### Prerequisites
 
@@ -49,8 +49,8 @@ A powerful application generator that combines MetaGPT multi-agent framework wit
 
 1. **Clone and setup environment:**
    ```bash
-   git clone <repository>
-   cd <project-directory>
+   git clone https://github.com/rajshah9305/awsmetagpt.git
+   cd awsmetagpt
    ```
 
 2. **Configure environment:**
@@ -95,60 +95,26 @@ METAGPT_WORKSPACE=./workspace
 METAGPT_LOG_LEVEL=INFO
 ```
 
-## 🤖 Agent Roles
+## Agent Roles
 
 The system includes specialized MetaGPT agents:
 
-1. **Product Manager**
-   - Requirements analysis
-   - User stories creation
-   - Business logic definition
+1. **Product Manager** - Requirements analysis and user stories
+2. **System Architect** - Technical architecture and design
+3. **Project Manager** - Project planning and coordination
+4. **Software Engineer** - Code implementation
+5. **QA Engineer** - Testing strategies and quality assurance
+6. **DevOps Engineer** - Infrastructure and deployment
 
-2. **System Architect**
-   - Technical architecture design
-   - Technology stack selection
-   - System specifications
+## Generation Process
 
-3. **Project Manager**
-   - Project planning
-   - Timeline management
-   - Resource coordination
+1. **Initialization** - MetaGPT team setup and workspace creation
+2. **Multi-Agent Execution** - Collaborative work across specialized agents
+3. **Code Generation** - Complete, working applications
+4. **Live Preview** - E2B sandboxes execute code in real-time
+5. **Artifact Processing** - Documentation, code, and configurations
 
-4. **Software Engineer**
-   - Code implementation
-   - Technical solutions
-   - Code structure design
-
-5. **QA Engineer**
-   - Testing strategies
-   - Quality assurance plans
-   - Test case creation
-
-6. **DevOps Engineer**
-   - Infrastructure design
-   - System setup
-   - Operational procedures
-
-## 🔄 Generation Process
-
-1. **Initialization**
-   - MetaGPT team setup
-   - Workspace creation
-   - Agent configuration
-
-2. **Multi-Agent Execution**
-   - Requirements analysis (Product Manager)
-   - Architecture design (System Architect)
-   - Project planning (Project Manager)
-   - Implementation (Software Engineer)
-   - Testing strategy (QA Engineer)
-   - Infrastructure Plan (DevOps)
-
-3. **Code Generation**: Complete, working applications
-4. **Live Preview**: E2B sandboxes execute code in real-time
-5. **Artifact Processing**: Documentation, code, and configurations
-
-## 📡 API Endpoints
+## API Endpoints
 
 ### Generation
 - `POST /api/v1/generate` - Start app generation
@@ -170,7 +136,7 @@ The system includes specialized MetaGPT agents:
 ### WebSocket
 - `WS /ws/{client_id}` - Real-time updates
 
-## 🧪 E2B Integration
+## E2B Integration
 
 ### Supported Frameworks
 
@@ -189,9 +155,7 @@ The system includes specialized MetaGPT agents:
 - File system operations
 - Process management
 
-## 🔧 Development
-
-### Project Structure
+## Project Structure
 
 ```
 ├── app/                    # Backend application
@@ -206,17 +170,24 @@ The system includes specialized MetaGPT agents:
 ├── main.py               # FastAPI application
 ├── requirements.txt      # Python dependencies
 ├── package.json         # Node.js dependencies
+├── vercel.json          # Vercel deployment config
 └── start-dev.sh         # Development startup
 ```
 
-### Key Services
+## Deployment
 
-1. **MetaGPT Service**: Orchestrates multi-agent generation
-2. **E2B Service**: Manages sandbox lifecycle and execution
-3. **WebSocket Manager**: Handles real-time communication
-4. **Bedrock Client**: Interfaces with AWS AI models
+### Vercel Deployment
 
-## 🚦 Usage
+This project is configured for deployment on Vercel:
+
+1. Push your changes to GitHub
+2. Import the repository in Vercel
+3. Configure environment variables in Vercel dashboard
+4. Deploy
+
+The `vercel.json` configuration handles both the FastAPI backend and React frontend.
+
+## Usage
 
 1. **Start the application** using development or production scripts
 2. **Open the web interface** at http://localhost:3000 (dev) or http://localhost:8000 (prod)
@@ -227,15 +198,7 @@ The system includes specialized MetaGPT agents:
 7. **Preview live application** in E2B sandbox
 8. **Download artifacts** including code and documentation
 
-## 🔍 Monitoring
-
-- **Health Check**: `/health` endpoint
-- **WebSocket Status**: Real-time connection monitoring
-- **Generation Progress**: Live agent updates
-- **Sandbox Logs**: E2B execution output
-- **System Metrics**: Performance tracking
-
-## 🛡️ Security
+## Security
 
 - Input validation and sanitization
 - Rate limiting on API endpoints
@@ -243,7 +206,7 @@ The system includes specialized MetaGPT agents:
 - Secure WebSocket connections
 - Environment variable protection
 
-## 📝 License
+## License
 
 This project integrates with:
 - [MetaGPT](https://github.com/FoundationAgents/MetaGPT) - Multi-agent framework
