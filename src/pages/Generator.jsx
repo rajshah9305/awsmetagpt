@@ -266,7 +266,7 @@ const Generator = () => {
                         ...prev, 
                         tech_stack_preferences: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
                       }))}
-                      placeholder="React, Node.js, PostgreSQL, Docker..."
+                      placeholder="React, Node.js, PostgreSQL, MongoDB..."
                       className="input"
                     />
                   </div>

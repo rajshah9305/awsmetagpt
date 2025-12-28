@@ -39,7 +39,7 @@ const About = () => {
     'Real-time generation progress tracking',
     'Multiple AI model support (Claude, Llama, Titan)',
     'Complete project documentation',
-    'Ready-to-deploy code structure',
+    'Ready-to-use code structure',
     'WebSocket-based live updates',
     'Customizable agent selection'
   ]
@@ -72,8 +72,8 @@ const About = () => {
     },
     {
       role: 'DevOps Engineer',
-      description: 'Designs deployment strategies, infrastructure, and operational procedures',
-      responsibilities: ['Deployment planning', 'Infrastructure design', 'Monitoring setup', 'CI/CD pipelines']
+      description: 'Designs infrastructure and operational procedures',
+      responsibilities: ['Infrastructure design', 'Monitoring setup', 'CI/CD pipelines', 'System architecture']
     }
   ]
 
@@ -161,7 +161,7 @@ const About = () => {
               </h3>
               <p className="text-secondary-600">
                 Receive a complete application with code, documentation, 
-                tests, and deployment instructions ready for production.
+                tests, and setup instructions ready for development.
               </p>
             </motion.div>
           </div>

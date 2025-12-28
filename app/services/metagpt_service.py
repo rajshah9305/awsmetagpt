@@ -332,7 +332,7 @@ Please create a full application that meets these requirements with proper archi
             return 'project_manager'
         elif any(keyword in path_str for keyword in ['test', 'spec', 'qa']):
             return 'qa_engineer'
-        elif any(keyword in file_name for keyword in ['deploy', 'docker', 'ci', 'cd']):
+        elif any(keyword in file_name for keyword in ['infrastructure', 'setup', 'ci', 'cd']):
             return 'devops'
         else:
             return 'engineer'

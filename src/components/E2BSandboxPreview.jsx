@@ -281,7 +281,7 @@ const E2BSandboxPreview = ({
       'project plan & timeline': 'project_plan.md',
       'technical implementation': 'implementation.md',
       'test strategy & cases': 'test_strategy.md',
-      'deployment & infrastructure': 'deployment.md'
+      'infrastructure & setup': 'infrastructure.md'
     }
 
     return extensionMap[artifact.name.toLowerCase()] || `${name}.md`

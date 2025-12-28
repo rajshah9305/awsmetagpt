@@ -26,7 +26,7 @@ const Home = () => {
     {
       icon: Cloud,
       title: 'Cloud-Native',
-      description: 'Built for modern cloud deployment and scalability'
+      description: 'Built for modern development and scalability'
     }
   ]
 
@@ -35,7 +35,7 @@ const Home = () => {
     'Multiple AI models for different tasks',
     'Real-time generation progress',
     'Complete project documentation',
-    'Ready-to-deploy code structure',
+    'Ready-to-use code structure',
     'No coding experience required'
   ]
 
