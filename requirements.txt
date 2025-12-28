@@ -7,8 +7,8 @@ python-multipart==0.0.6
 boto3==1.34.0
 botocore==1.34.0
 
-# WebSocket support
-websockets==12.0
+# WebSocket support (compatible with MetaGPT)
+websockets==11.0.2
 
 # MetaGPT - Real multi-agent framework
 metagpt==0.8.1

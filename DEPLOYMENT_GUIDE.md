@@ -99,7 +99,9 @@ This checks:
 
 ## 🌐 Production Deployment
 
-### Docker
+### Full Stack Deployment (Recommended)
+
+**Docker**
 ```bash
 # Build image
 docker build -t awsmetagpt .
@@ -108,22 +110,26 @@ docker build -t awsmetagpt .
 docker run -p 8000:8000 --env-file .env awsmetagpt
 ```
 
-### AWS EC2
+**AWS EC2**
 1. Launch EC2 instance (t3.medium+)
 2. Install Python 3.8+, Node.js 16+
 3. Clone repo and run setup
 4. Configure security groups for port 8000
 
-### Vercel (Frontend Only)
+**Railway/Render (Full Stack)**
+1. Connect GitHub repository
+2. Set environment variables
+3. Deploy with: `python -m uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+### Frontend-Only Deployment
+
+**Vercel (Frontend + Simplified API)**
 ```bash
 npm run build
 vercel deploy
 ```
 
-### Railway/Render (Full Stack)
-1. Connect GitHub repository
-2. Set environment variables
-3. Deploy with: `python -m uvicorn main:app --host 0.0.0.0 --port $PORT`
+**Note**: Vercel deployment provides a simplified API due to serverless limitations. MetaGPT and E2B integration require persistent processes not available in serverless environments. For full functionality, use Docker or VPS deployment.
 
 ## 📊 API Endpoints
 
