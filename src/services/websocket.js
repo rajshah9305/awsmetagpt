@@ -26,7 +26,6 @@ class WebSocketService {
         this.ws = new WebSocket(wsUrl)
         
         this.ws.onopen = () => {
-          console.log('✅ WebSocket connected')
           this.isConnecting = false
           this.reconnectAttempts = 0
           this.startHeartbeat()
@@ -53,7 +52,6 @@ class WebSocketService {
         }
         
         this.ws.onclose = (event) => {
-          console.log('❌ WebSocket disconnected:', event.code, event.reason)
           this.isConnecting = false
           this.stopHeartbeat()
           this.notifyListeners('close', event)
@@ -82,11 +80,9 @@ class WebSocketService {
     this.reconnectAttempts++
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
     
-    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${delay}ms...`)
-    
     setTimeout(() => {
-      this.connect(clientId).catch((error) => {
-        console.error('Reconnection failed:', error)
+      this.connect(clientId).catch(() => {
+        // Reconnection failed, will retry if attempts remain
       })
     }, delay)
   }

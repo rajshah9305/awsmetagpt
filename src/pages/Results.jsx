@@ -122,7 +122,6 @@ const Results = () => {
   }
 
   const handleProgressUpdate = (data) => {
-    console.log('Progress update:', data)
     setStatus(prev => ({
       ...prev,
       status: data.status,
@@ -139,7 +138,6 @@ const Results = () => {
   }
 
   const handleAgentUpdate = (data) => {
-    console.log('Agent update:', data)
     // Update status with agent-specific information
     setStatus(prev => ({
       ...prev,
@@ -149,7 +147,6 @@ const Results = () => {
   }
 
   const handleArtifactUpdate = (data) => {
-    console.log('Artifact update:', data)
     const artifact = data.artifact
     
     // Update or add artifact
@@ -171,20 +168,17 @@ const Results = () => {
   }
 
   const handleStreamingContent = (data) => {
-    console.log('Streaming content:', data)
     // Handle streaming content updates
     // This could be used to show real-time content generation
   }
 
   const handleGenericMessage = (data) => {
-    console.log('WebSocket message:', data)
     
     // Handle different message formats
     if (typeof data === 'string') {
       try {
         data = JSON.parse(data)
       } catch (e) {
-        console.log('Non-JSON message:', data)
         return
       }
     }
@@ -204,13 +198,12 @@ const Results = () => {
         handleStreamingContent(data)
         break
       case 'connection':
-        console.log('WebSocket connected:', data.message)
         break
       case 'heartbeat':
         // Heartbeat received, connection is alive
         break
       default:
-        console.log('Unknown message type:', data.type, data)
+        break
     }
   }
 
@@ -225,7 +218,6 @@ const Results = () => {
   }
 
   const handleWebSocketClose = () => {
-    console.log('WebSocket connection closed')
     
     // Start polling as fallback if generation is still running
     if (status && (status.status === 'running' || status.status === 'started') && !pollingInterval) {
@@ -248,11 +240,10 @@ const Results = () => {
   }
 
   const handleSandboxReady = (sandbox) => {
-    console.log('E2B Sandbox ready:', sandbox)
+    // Sandbox ready
   }
 
   const handlePreviewUpdate = (info) => {
-    console.log('Preview updated:', info)
     toast.success(`Live preview ready: ${info.type} application`)
   }
 
