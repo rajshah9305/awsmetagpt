@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
 import {
   Play, Square, RotateCcw, ExternalLink, Download,
   Terminal, Globe, Code, FileText, Loader, AlertCircle,
@@ -46,12 +45,13 @@ const getLogs = async (generationId) => {
   return response.json()
 }
 
-const cleanupSandbox = async (generationId) => {
-  const response = await fetch(`/api/v1/e2b/sandbox/${generationId}`, {
-    method: 'DELETE',
-  })
-  return response.json()
-}
+// Cleanup sandbox function (available for future use)
+// const cleanupSandbox = async (generationId) => {
+//   const response = await fetch(`/api/v1/e2b/sandbox/${generationId}`, {
+//     method: 'DELETE',
+//   })
+//   return response.json()
+// }
 
 const E2BSandboxPreview = ({
   artifacts = [],
@@ -292,6 +292,7 @@ const E2BSandboxPreview = ({
     if (artifacts.length > 0 && !sandboxReady && e2bConfigured) {
       initializeSandbox()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [artifacts, sandboxReady, e2bConfigured])
 
   if (!artifacts || artifacts.length === 0) {
@@ -322,7 +323,7 @@ const E2BSandboxPreview = ({
             <h3 className="font-semibold text-gray-900">Live Preview</h3>
           </div>
           
-          {sandbox && (
+          {sandboxReady && (
             <div className="flex items-center space-x-1 text-sm text-green-600">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span>Sandbox Active</span>
@@ -403,7 +404,7 @@ const E2BSandboxPreview = ({
           </div>
           <p className="text-sm text-red-700 mt-1">{error}</p>
           
-          {!sandbox && (
+          {!sandboxReady && (
             <button
               onClick={initializeSandbox}
               className="mt-2 text-sm text-red-600 hover:text-red-800 underline"

@@ -99,7 +99,7 @@ const About = () => {
           </h1>
           
           <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
-            A revolutionary platform that combines MetaGPT's multi-agent framework with AWS Bedrock's 
+            A revolutionary platform that combines MetaGPT&apos;s multi-agent framework with AWS Bedrock&apos;s 
             foundation models to generate complete applications from natural language descriptions.
           </p>
         </motion.div>

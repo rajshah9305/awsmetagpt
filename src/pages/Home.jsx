@@ -95,7 +95,7 @@ const Home = () => {
               Powered by Advanced AI
             </h2>
             <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-              Combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models
+              Combining MetaGPT&apos;s multi-agent framework with AWS Bedrock&apos;s foundation models
             </p>
           </div>
 

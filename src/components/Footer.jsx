@@ -13,7 +13,7 @@ const Footer = () => {
               <span className="text-xl font-bold text-white">MetaGPT + Bedrock</span>
             </div>
             <p className="text-secondary-400 max-w-md">
-              Generate complete applications from natural language using MetaGPT's multi-agent framework 
+              Generate complete applications from natural language using MetaGPT&apos;s multi-agent framework 
               powered by AWS Bedrock AI models.
             </p>
           </div>

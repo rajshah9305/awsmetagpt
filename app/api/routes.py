@@ -2,13 +2,16 @@
 API routes for the MetaGPT + Bedrock app generator
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from typing import List, Dict, Any, Optional
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi.security import HTTPBearer
+from typing import List, Dict, Any
 import uuid
 import logging
+from datetime import datetime, timedelta
+import asyncio
 
 from app.models.schemas import (
-    GenerationRequest, GenerationResponse, GenerationResult,
+    GenerationRequest, GenerationResponse,
     HealthCheck, GeneratedArtifact
 )
 from app.services.metagpt_service import metagpt_service
@@ -19,6 +22,31 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# Simple rate limiting (in production, use Redis or similar)
+rate_limit_store = {}
+
+def check_rate_limit(client_ip: str, max_requests: int = 10, window_minutes: int = 60):
+    """Simple rate limiting check"""
+    now = datetime.now()
+    window_start = now - timedelta(minutes=window_minutes)
+    
+    if client_ip not in rate_limit_store:
+        rate_limit_store[client_ip] = []
+    
+    # Clean old requests
+    rate_limit_store[client_ip] = [
+        req_time for req_time in rate_limit_store[client_ip] 
+        if req_time > window_start
+    ]
+    
+    # Check if limit exceeded
+    if len(rate_limit_store[client_ip]) >= max_requests:
+        return False
+    
+    # Add current request
+    rate_limit_store[client_ip].append(now)
+    return True
+
 @router.post("/generate", response_model=GenerationResponse)
 async def generate_app(request: GenerationRequest, background_tasks: BackgroundTasks):
     """
@@ -26,8 +54,23 @@ async def generate_app(request: GenerationRequest, background_tasks: BackgroundT
     """
     try:
         # Validate request
-        if not request.requirement.strip():
+        if not request.requirement or not request.requirement.strip():
             raise HTTPException(status_code=400, detail="Requirement cannot be empty")
+        
+        if len(request.requirement) > 10000:
+            raise HTTPException(status_code=400, detail="Requirement too long (max 10,000 characters)")
+        
+        if not request.active_agents or len(request.active_agents) == 0:
+            raise HTTPException(status_code=400, detail="At least one agent must be selected")
+        
+        if len(request.active_agents) > 6:
+            raise HTTPException(status_code=400, detail="Maximum 6 agents allowed")
+        
+        # Check if there are too many active generations
+        active_count = len([g for g in metagpt_service.active_generations.values() 
+                           if g.get("status") in ["started", "running"]])
+        if active_count >= 5:
+            raise HTTPException(status_code=429, detail="Too many active generations. Please wait.")
         
         # Generate unique client ID for WebSocket connection
         client_id = str(uuid.uuid4())
@@ -43,6 +86,8 @@ async def generate_app(request: GenerationRequest, background_tasks: BackgroundT
             websocket_url=f"ws://localhost:{settings.APP_PORT}/ws/{client_id}"
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to start generation: {e}")
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
@@ -52,6 +97,12 @@ async def get_generation_status(generation_id: str):
     """
     Get the current status of a generation process
     """
+    # Validate generation_id format
+    try:
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
     status = metagpt_service.get_generation_status(generation_id)
     
     if not status:
@@ -71,6 +122,12 @@ async def get_generation_artifacts(generation_id: str):
     """
     Get all generated artifacts for a specific generation
     """
+    # Validate generation_id format
+    try:
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
     artifacts = metagpt_service.get_generation_artifacts(generation_id)
     
     if not artifacts and generation_id not in metagpt_service.active_generations:
@@ -83,6 +140,16 @@ async def get_specific_artifact(generation_id: str, artifact_name: str):
     """
     Get a specific artifact by name
     """
+    # Validate generation_id format
+    try:
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
+    # Validate artifact name
+    if not artifact_name or len(artifact_name) > 255:
+        raise HTTPException(status_code=400, detail="Invalid artifact name")
+    
     artifacts = metagpt_service.get_generation_artifacts(generation_id)
     
     for artifact in artifacts:
@@ -206,6 +273,12 @@ async def create_e2b_sandbox(generation_id: str):
     Create an E2B sandbox for a specific generation
     """
     try:
+        # Validate generation_id format
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
+    try:
         result = await e2b_service.create_sandbox(generation_id)
         if result:
             return {"status": "success", "sandbox_id": result}
@@ -220,6 +293,27 @@ async def write_e2b_files(generation_id: str, artifacts: List[Dict[str, Any]]):
     """
     Write artifacts to the E2B sandbox
     """
+    try:
+        # Validate generation_id format
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
+    # Validate artifacts
+    if not artifacts or len(artifacts) == 0:
+        raise HTTPException(status_code=400, detail="No artifacts provided")
+    
+    if len(artifacts) > 100:
+        raise HTTPException(status_code=400, detail="Too many artifacts (max 100)")
+    
+    for artifact in artifacts:
+        if not isinstance(artifact, dict):
+            raise HTTPException(status_code=400, detail="Invalid artifact format")
+        
+        content = artifact.get("content", "")
+        if len(content) > 1000000:  # 1MB limit per file
+            raise HTTPException(status_code=400, detail="Artifact content too large (max 1MB)")
+    
     try:
         success = await e2b_service.write_files(generation_id, artifacts)
         if success:
@@ -236,6 +330,12 @@ async def run_e2b_application(generation_id: str):
     Run the application in the E2B sandbox
     """
     try:
+        # Validate generation_id format
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
+    try:
         preview_url = await e2b_service.run_application(generation_id)
         if preview_url:
             return {"status": "success", "preview_url": preview_url}
@@ -250,6 +350,12 @@ async def stop_e2b_application(generation_id: str):
     """
     Stop the running application in the E2B sandbox
     """
+    try:
+        # Validate generation_id format
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
     try:
         success = await e2b_service.stop_application(generation_id)
         if success:
@@ -266,6 +372,12 @@ async def get_e2b_logs(generation_id: str):
     Get logs from the E2B sandbox
     """
     try:
+        # Validate generation_id format
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
+    try:
         logs = await e2b_service.get_logs(generation_id)
         return {"status": "success", "logs": logs}
     except Exception as e:
@@ -278,7 +390,16 @@ async def cleanup_e2b_sandbox(generation_id: str):
     Clean up and close the E2B sandbox
     """
     try:
+        # Validate generation_id format
+        uuid.UUID(generation_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid generation ID format")
+    
+    try:
         success = await e2b_service.cleanup_sandbox(generation_id)
+        # Also cleanup MetaGPT generation
+        metagpt_service.cleanup_generation(generation_id)
+        
         if success:
             return {"status": "success", "message": "Sandbox cleaned up successfully"}
         else:
@@ -296,7 +417,7 @@ async def health_check():
     bedrock_available = bedrock_client.client is not None
 
     # Check MetaGPT configuration
-    metagpt_configured = bool(settings.METAGPT_API_KEY)
+    metagpt_configured = bool(settings.OPENAI_API_KEY or settings.ANTHROPIC_API_KEY)
 
     # Check E2B configuration
     e2b_configured = bool(settings.E2B_API_KEY)

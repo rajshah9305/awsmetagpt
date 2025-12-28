@@ -16,7 +16,7 @@ const ArtifactViewer = ({ artifact }) => {
       setCopied(true)
       toast.success('Content copied to clipboard')
       setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy content')
     }
   }
@@ -48,7 +48,7 @@ const ArtifactViewer = ({ artifact }) => {
       <div className="prose prose-secondary max-w-none">
         <ReactMarkdown
           components={{
-            code({ node, inline, className, children, ...props }) {
+            code({ inline, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || '')
               return !inline && match ? (
                 <SyntaxHighlighter

@@ -97,7 +97,7 @@ export const getE2BApiKey = () => {
 
 // Helper function to detect project type from files
 export const detectProjectType = (files) => {
-  const { filePatterns } = E2B_CONFIG
+  // const { filePatterns } = E2B_CONFIG
   
   // Check for React
   if (files.some(f => 

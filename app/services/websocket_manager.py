@@ -6,7 +6,6 @@ from fastapi import WebSocket
 from typing import Dict, List, Optional, Any
 import json
 import logging
-import asyncio
 from datetime import datetime
 
 logger = logging.getLogger(__name__)

@@ -1,21 +1,24 @@
 # Core dependencies
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
-pydantic==2.10.3
-pydantic-settings==2.7.0
-python-multipart==0.0.12
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
 
 # AWS Bedrock and AI
-boto3==1.35.84
-botocore==1.35.84
+boto3==1.34.0
+botocore==1.34.0
 
 # WebSocket support
-websockets==13.1
+websockets==12.0
+
+# MetaGPT - Real multi-agent framework
+metagpt==0.8.1
 
 # E2B Sandbox
-e2b>=1.0.0
+e2b==0.17.0
+
+# Pydantic settings
+pydantic-settings==2.1.0
 
 # Utilities
-python-dotenv==1.0.1
-aiofiles==24.1.0
-httpx==0.28.1
+python-dotenv==1.0.0
+aiofiles==23.2.1

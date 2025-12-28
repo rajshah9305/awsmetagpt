@@ -5,7 +5,7 @@ AWS Bedrock client for AI model interactions
 import boto3
 import json
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Optional
 from botocore.exceptions import ClientError, NoCredentialsError
 import logging
 

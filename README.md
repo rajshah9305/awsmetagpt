@@ -1,254 +1,241 @@
-# MetaGPT + AWS Bedrock App Generator
+# MetaGPT + E2B Integration - Real Multi-Agent App Generator
 
-A production-ready web application that combines MetaGPT's multi-agent framework with AWS Bedrock AI models to generate complete applications from natural language descriptions.
+A powerful application that combines **real MetaGPT multi-agent framework** with **E2B live code execution** to generate complete applications from natural language requirements.
 
-## 🌟 Features
+## 🚀 Features
 
-- **🤖 AI-Powered Generation**: Leverage AWS Bedrock's latest foundation models (Claude 4, Nova, Llama 3.3)
-- **👥 Multi-Agent Collaboration**: MetaGPT agents work together like a real development team
-- **⚡ Real-time Updates**: WebSocket-based live progress tracking
-- **🎨 Modern UI**: Clean, responsive interface built with React and Tailwind CSS
-- **🔧 Live Previews**: E2B sandbox integration for interactive app previews
-- **📋 Complete Documentation**: Generate full project specs, code, and deployment guides
+- **Real MetaGPT Integration**: Uses actual MetaGPT agents (Product Manager, Architect, Engineer, QA, DevOps)
+- **Live Code Execution**: E2B sandboxes for real-time code preview and testing
+- **Multiple AI Models**: Support for OpenAI, Anthropic, and AWS Bedrock models
+- **Real-time Updates**: WebSocket-based progress tracking
+- **Production Ready**: Complete applications with proper architecture
 
-## 🏗️ Architecture
+## 🛠️ Prerequisites
 
-```
-Frontend (React + Vite + Tailwind)
-    ↓ WebSocket + REST API
-Backend (FastAPI + Python)
-    ↓ Multi-Agent Framework
-MetaGPT Agents (PM, Architect, Engineer, QA, DevOps)
-    ↓ AI Model Integration
-AWS Bedrock Foundation Models
-```
+- **Python 3.8+**
+- **Node.js 16+**
+- **npm or yarn**
 
-## 🚀 Quick Start
+## 📋 Required API Keys
 
-### Prerequisites
+You'll need at least one of these API key combinations:
 
-- **Python 3.9-3.11** (3.12+ not yet supported by some dependencies)
-- **Node.js 16+** and npm
-- **AWS Account** with Bedrock access (credentials pre-configured)
+### For MetaGPT (choose one):
+- **OpenAI API Key** - Get from [OpenAI Platform](https://platform.openai.com/)
+- **Anthropic API Key** - Get from [Anthropic Console](https://console.anthropic.com/)
 
-### Option 1: One-Command Setup (Recommended)
+### For AWS Bedrock (optional):
+- **AWS Access Key ID & Secret** - For additional model options
+
+### For Live Code Execution:
+- **E2B API Key** - Get from [E2B.dev](https://e2b.dev/) (free tier available)
+
+## 🚀 Quick Setup
+
+### Option 1: Automated Setup (Recommended)
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd metagpt-bedrock-generator
-
-# Production mode (serves built frontend)
-./start.sh
-
-# Development mode (live reload)
-./start-dev.sh
+cd awsmetagpt
+python setup.py
 ```
 
 ### Option 2: Manual Setup
 
-```bash
-# 1. Backend setup
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+1. **Clone and navigate:**
+   ```bash
+   cd awsmetagpt
+   ```
 
-# 2. Frontend setup
-npm install
+2. **Create virtual environment:**
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-# 3. Environment configuration
-cp .env.example .env
-# Configure your AWS credentials in .env
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   npm install
+   ```
 
-# 4. Build frontend (production only)
-npm run build
+4. **Configure environment:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API keys
+   ```
 
-# 5. Start application
-python3 main.py  # Production
-# OR
-uvicorn main:app --reload  # Development backend
-npm run dev                # Development frontend
-```
+5. **Create workspace:**
+   ```bash
+   mkdir -p workspace
+   ```
 
 ## ⚙️ Configuration
 
-### AWS Credentials (Configuration Required)
-You need to configure your AWS credentials in `.env`:
+Edit the `.env` file with your API keys:
+
 ```env
+# MetaGPT Configuration (choose one or more)
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# AWS Bedrock (optional)
 AWS_ACCESS_KEY_ID=your_aws_access_key_here
 AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here
-AWS_REGION=us-east-1
+AWS_REGION=us-west-2
+
+# E2B Sandbox (required for live preview)
+E2B_API_KEY=your_e2b_api_key_here
+
+# MetaGPT Settings
+METAGPT_WORKSPACE=./workspace
+METAGPT_LOG_LEVEL=INFO
 ```
 
-### Available Bedrock Models (2025)
+## 🏃‍♂️ Running the Application
 
-**Available by Default:**
-- **Amazon Nova Pro** (us.amazon.nova-pro-v1:0) - Flagship multimodal model
-- **Amazon Nova Lite** (us.amazon.nova-lite-v1:0) - Fast and cost-effective
-- **Amazon Nova Micro** (us.amazon.nova-micro-v1:0) - Ultra-fast for simple tasks
-- **Meta Llama 3.3 70B** (us.meta.llama3-3-70b-instruct-v1:0) - Latest Llama model
-
-**Requires Approval:**
-- **Claude Sonnet 4** (us.anthropic.claude-sonnet-4-20250514-v1:0) - Most capable
-- **Claude Haiku 4.5** (us.anthropic.claude-haiku-4-5-20251001-v1:0) - Fastest
-- **Claude Opus 4** (us.anthropic.claude-opus-4-20250514-v1:0) - Most powerful
-
-### Testing Your Setup
-```bash
-# Check application health
-curl http://localhost:8000/health
-
-# Verify API endpoints
-curl http://localhost:8000/api/v1/models/bedrock
-```
-
-## 🎯 Usage
-
-1. **Start the Application**: Run `./start.sh` or `./start-dev.sh`
-2. **Open Browser**: Navigate to http://localhost:8000
-3. **Describe Your App**: Enter your application idea in natural language
-4. **Configure Generation**: Select app type, AI models, and active agents
-5. **Watch Real-time Progress**: See agents collaborate in real-time
-6. **Download Results**: Get complete code, documentation, and deployment guides
-
-### Example Prompts
-- "Build an e-commerce platform with user authentication, product catalog, and payment processing"
-- "Create a mobile fitness app with activity tracking, social features, and wearable integration"
-- "Develop a REST API for weather data with authentication and rate limiting"
-
-## 🤖 AI Agents
-
-Each agent produces specialized deliverables:
-
-- **📋 Product Manager**: Requirements, user stories, competitive analysis
-- **🏛️ System Architect**: Technical architecture, technology stack selection
-- **📅 Project Manager**: Project plans, timelines, resource management
-- **💻 Software Engineer**: Code structure, implementation details
-- **🧪 QA Engineer**: Testing strategies, test cases, quality assurance
-- **☁️ DevOps Engineer**: Deployment, infrastructure, CI/CD pipelines
-
-## 🛠️ Technology Stack
-
-### Backend
-- **FastAPI 0.115.5**: High-performance Python web framework
-- **AWS Bedrock**: Latest foundation models
-- **WebSockets 13.1**: Real-time communication
-- **Pydantic 2.10.3**: Data validation and settings
-- **Boto3 1.35.84**: AWS SDK
-
-### Frontend
-- **React 18.3.0**: Modern UI framework
-- **Vite 5.4.0**: Fast build tool and dev server
-- **Tailwind CSS 3.4.0**: Utility-first styling
-- **Framer Motion 11.0.0**: Smooth animations
-- **Lucide React 0.400.0**: Beautiful icons
-- **React Router 6.26.0**: Client-side routing
-
-## 📊 API Endpoints
-
-- `POST /api/v1/generate` - Start app generation
-- `GET /api/v1/generate/{id}/status` - Get generation status
-- `GET /api/v1/generate/{id}/artifacts` - Get generated artifacts
-- `GET /api/v1/models/bedrock` - List available models
-- `GET /api/v1/agents/roles` - List available agent roles
-- `GET /api/v1/health` - Health check
-- `WS /ws/{client_id}` - WebSocket for real-time updates
-
-## 🚀 Deployment
-
-### Local Development
+### Development Mode (with hot reload):
 ```bash
 ./start-dev.sh
 ```
+- Backend: http://localhost:8000
+- Frontend: http://localhost:3000
+- API Docs: http://localhost:8000/docs
 
-### Production
+### Production Mode:
 ```bash
 ./start.sh
 ```
+- Application: http://localhost:8000
 
-### Docker (Optional)
+## 🎯 How It Works
+
+1. **Input Requirements**: Describe your application in natural language
+2. **MetaGPT Agents**: Real agents analyze and create:
+   - Product Requirements (Product Manager)
+   - System Architecture (Architect)
+   - Implementation Plan (Engineer)
+   - Test Strategy (QA Engineer)
+   - Deployment Plan (DevOps)
+3. **Code Generation**: Complete, working applications
+4. **Live Preview**: E2B sandboxes execute code in real-time
+5. **Download**: Get all generated files
+
+## 🔧 API Endpoints
+
+### Generation
+- `POST /api/v1/generate` - Start app generation
+- `GET /api/v1/generate/{id}/status` - Get generation status
+- `GET /api/v1/generate/{id}/artifacts` - Get generated files
+
+### E2B Sandbox
+- `POST /api/v1/e2b/sandbox/{id}/create` - Create sandbox
+- `POST /api/v1/e2b/sandbox/{id}/files` - Upload files
+- `POST /api/v1/e2b/sandbox/{id}/run` - Run application
+- `GET /api/v1/e2b/sandbox/{id}/logs` - Get execution logs
+
+### Health & Info
+- `GET /health` - Service health check
+- `GET /api/v1/models/bedrock` - Available AI models
+- `GET /api/v1/agents/roles` - Available agent roles
+
+## 🧪 Testing the Setup
+
+1. **Health Check:**
+   ```bash
+   curl http://localhost:8000/health
+   ```
+
+2. **Test Generation:**
+   - Open http://localhost:3000
+   - Enter: "Create a simple todo app with React"
+   - Watch real MetaGPT agents work
+   - See live code execution in E2B sandbox
+
+## 📁 Project Structure
+
+```
+awsmetagpt/
+├── app/
+│   ├── api/routes.py          # API endpoints
+│   ├── services/
+│   │   ├── metagpt_service.py # Real MetaGPT integration
+│   │   └── e2b_service.py     # E2B sandbox management
+│   └── core/config.py         # Configuration
+├── src/
+│   ├── pages/Results.jsx      # Results display
+│   └── components/
+│       └── E2BSandboxPreview.jsx # Live preview
+├── workspace/                 # MetaGPT workspace
+├── requirements.txt           # Python dependencies
+├── package.json              # Node.js dependencies
+├── setup.py                  # Automated setup
+├── start.sh                  # Production start
+└── start-dev.sh              # Development start
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues:
+
+1. **"MetaGPT not found"**
+   ```bash
+   pip install metagpt>=0.8.0
+   ```
+
+2. **"E2B API key invalid"**
+   - Verify your E2B API key at https://e2b.dev/
+   - Check .env file formatting
+
+3. **"No AI model available"**
+   - Ensure at least one API key is configured (OpenAI or Anthropic)
+   - Check API key validity
+
+4. **"Sandbox creation failed"**
+   - Verify E2B API key
+   - Check E2B service status
+
+### Debug Mode:
 ```bash
-# Build image
-docker build -t metagpt-bedrock-generator .
-
-# Run container
-docker run -p 8000:8000 --env-file .env metagpt-bedrock-generator
+export DEBUG=true
+export METAGPT_LOG_LEVEL=DEBUG
+./start-dev.sh
 ```
 
-### AWS EC2 Deployment
-1. Launch EC2 instance (t3.medium or larger)
-2. Install Python 3.9+, Node.js 16+
-3. Clone repository and run `./start.sh`
-4. Configure security groups for port 8000
+## 🆚 Simulation vs Real Integration
 
-## 🔧 Development
-
-### Project Structure
-```
-├── app/                 # Backend application
-│   ├── api/            # API routes
-│   ├── core/           # Configuration
-│   ├── models/         # Pydantic models
-│   └── services/       # Business logic
-├── src/                # Frontend application
-│   ├── components/     # React components
-│   ├── pages/          # Page components
-│   └── services/       # API services
-├── dist/               # Built frontend (production)
-├── requirements.txt    # Python dependencies
-├── package.json       # Node.js dependencies
-├── start.sh           # Production startup
-└── start-dev.sh       # Development startup
-```
-
-### Adding New Features
-1. Backend: Add routes in `app/api/routes.py`
-2. Frontend: Add components in `src/components/`
-3. Models: Define schemas in `app/models/schemas.py`
-4. Services: Add business logic in `app/services/`
-
-## 📈 Performance
-
-- **Cold start**: ~2-3 seconds
-- **Generation time**: 30-120 seconds (depending on complexity)
-- **WebSocket latency**: <100ms
-- **Memory usage**: ~200MB (backend) + ~50MB (frontend)
-- **Concurrent users**: 50+ (single instance)
-
-## 🔒 Security
-
-- Environment variables for sensitive data
-- CORS configured for production
-- Input validation with Pydantic
-- WebSocket connection validation
-- AWS IAM best practices
+| Feature | Previous (Simulation) | Now (Real Integration) |
+|---------|----------------------|------------------------|
+| Agents | Fake agent responses | Real MetaGPT agents |
+| Code Quality | Basic templates | Production-ready code |
+| Architecture | Simple structure | Proper system design |
+| Testing | No tests | Real test strategies |
+| Execution | Static preview | Live E2B sandboxes |
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Test with real MetaGPT and E2B
+5. Submit a pull request
+
+## 📚 Documentation
+
+- [MetaGPT Documentation](https://github.com/geekan/MetaGPT)
+- [E2B Documentation](https://e2b.dev/docs)
+- [OpenAI API](https://platform.openai.com/docs)
+- [Anthropic API](https://docs.anthropic.com/)
+
+## 🔐 Security
+
+- API keys are stored in `.env` (never commit this file)
+- E2B sandboxes are isolated and temporary
+- All code execution happens in secure containers
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [MetaGPT](https://github.com/geekan/MetaGPT) - Multi-agent framework
-- [AWS Bedrock](https://aws.amazon.com/bedrock/) - Foundation models
-- [FastAPI](https://fastapi.tiangolo.com/) - Backend framework
-- [React](https://react.dev/) - Frontend framework
-- [Tailwind CSS](https://tailwindcss.com/) - Styling framework
-
-## 📞 Support
-
-- 🐛 **Issues**: [GitHub Issues](https://github.com/example/issues)
-- 📧 **Email**: support@example.com
-- 💬 **Discord**: [Join our community](https://discord.gg/example)
+MIT License - see LICENSE file for details
 
 ---
 
-**Built with ❤️ for developers who want to accelerate their app development process using AI.**
+**Ready to build amazing applications with AI agents? Get your API keys and start generating!** 🚀

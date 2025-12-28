@@ -8,10 +8,10 @@ echo "🚀 Starting MetaGPT + AWS Bedrock App Generator (Production Mode)"
 
 # Check Python version
 python_version=$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d'.' -f1,2)
-required_version="3.9"
+required_version="3.8"
 
 if [ "$(printf '%s\n' "$required_version" "$python_version" | sort -V | head -n1)" != "$required_version" ]; then
-    echo "❌ Python 3.9+ required. Found: $python_version"
+    echo "❌ Python 3.8+ required. Found: $python_version"
     exit 1
 fi
 
@@ -45,11 +45,18 @@ pip install --upgrade pip
 echo "📥 Installing Python dependencies..."
 pip install -r requirements.txt
 
+# Create MetaGPT workspace directory
+echo "📁 Setting up MetaGPT workspace..."
+mkdir -p workspace
+
 # Check if .env file exists
 if [ ! -f ".env" ]; then
     echo "⚙️  Creating .env file from template..."
     cp .env.example .env
-    echo "✅ .env file created - please configure your AWS credentials"
+    echo "✅ .env file created - please configure your API keys:"
+    echo "   - AWS credentials for Bedrock"
+    echo "   - OpenAI or Anthropic API key for MetaGPT"
+    echo "   - E2B API key for live code execution"
 else
     echo "✅ .env file already exists"
 fi
@@ -75,6 +82,12 @@ echo "🎯 Starting production server..."
 echo "🌐 Application: http://localhost:8000"
 echo "📚 API Docs: http://localhost:8000/docs"
 echo "🔧 Health Check: http://localhost:8000/health"
+echo ""
+echo "📋 Required Configuration:"
+echo "   Make sure your .env file contains:"
+echo "   - AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+echo "   - OPENAI_API_KEY or ANTHROPIC_API_KEY"
+echo "   - E2B_API_KEY (get from https://e2b.dev/)"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""

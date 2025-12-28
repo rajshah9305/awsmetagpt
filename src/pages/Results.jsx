@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -19,8 +19,34 @@ const Results = () => {
   const [selectedArtifact, setSelectedArtifact] = useState(null)
   const [wsService] = useState(() => new WebSocketService())
   const [isLoading, setIsLoading] = useState(true)
-  const [sandboxReady, setSandboxReady] = useState(false)
-  const [previewInfo, setPreviewInfo] = useState(null)
+  const [pollingInterval, setPollingInterval] = useState(null)
+
+  // Polling function for status updates
+  const pollStatus = useCallback(async () => {
+    try {
+      const statusData = await getGenerationStatus(generationId)
+      setStatus(statusData)
+      
+      // Load artifacts if generation is completed
+      if (statusData.status === 'completed') {
+        const artifactsData = await getGenerationArtifacts(generationId)
+        setArtifacts(artifactsData)
+        
+        // Auto-select first artifact if none selected
+        if (artifactsData.length > 0 && !selectedArtifact) {
+          setSelectedArtifact(artifactsData[0])
+        }
+        
+        // Stop polling when completed
+        if (pollingInterval) {
+          clearInterval(pollingInterval)
+          setPollingInterval(null)
+        }
+      }
+    } catch (error) {
+      console.error('Error polling status:', error)
+    }
+  }, [generationId, selectedArtifact, pollingInterval])
 
   useEffect(() => {
     if (generationId) {
@@ -29,7 +55,11 @@ const Results = () => {
     
     return () => {
       wsService.disconnect()
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generationId])
 
   const initializeResults = async () => {
@@ -42,11 +72,17 @@ const Results = () => {
       if (statusData.status === 'completed') {
         const artifactsData = await getGenerationArtifacts(generationId)
         setArtifacts(artifactsData)
-      }
-      
-      // Connect to WebSocket for real-time updates
-      if (statusData.status === 'running' || statusData.status === 'started') {
+        
+        // Auto-select first artifact if none selected
+        if (artifactsData.length > 0) {
+          setSelectedArtifact(artifactsData[0])
+        }
+      } else if (statusData.status === 'running' || statusData.status === 'started') {
+        // Start WebSocket connection for real-time updates
         await connectWebSocket()
+        
+        // Start polling as fallback
+        startPolling()
       }
       
     } catch (error) {
@@ -57,63 +93,143 @@ const Results = () => {
     }
   }
 
+  const startPolling = () => {
+    // Poll every 2 seconds for status updates
+    const interval = setInterval(pollStatus, 2000)
+    setPollingInterval(interval)
+  }
+
   const connectWebSocket = async () => {
     try {
       const clientId = generationId
       
       await wsService.connect(clientId)
       
-      wsService.on('message', (data) => {
-        handleWebSocketMessage(data)
-      })
-      
-      wsService.on('close', () => {
-        console.log('WebSocket connection closed')
-      })
+      // Handle different message types
+      wsService.on('progress', handleProgressUpdate)
+      wsService.on('agent_update', handleAgentUpdate)
+      wsService.on('artifact_update', handleArtifactUpdate)
+      wsService.on('streaming_content', handleStreamingContent)
+      wsService.on('message', handleGenericMessage)
+      wsService.on('error', handleWebSocketError)
+      wsService.on('close', handleWebSocketClose)
       
     } catch (error) {
       console.error('Failed to connect WebSocket:', error)
+      // Fallback to polling if WebSocket fails
+      startPolling()
     }
   }
 
-  const handleWebSocketMessage = (data) => {
-    try {
-      if (typeof data === 'string') {
+  const handleProgressUpdate = (data) => {
+    console.log('Progress update:', data)
+    setStatus(prev => ({
+      ...prev,
+      status: data.status,
+      progress: data.progress,
+      message: data.message,
+      current_agent: data.current_agent,
+      estimated_time: data.estimated_time
+    }))
+    
+    // If completed, load artifacts
+    if (data.status === 'completed') {
+      loadArtifacts()
+    }
+  }
+
+  const handleAgentUpdate = (data) => {
+    console.log('Agent update:', data)
+    // Update status with agent-specific information
+    setStatus(prev => ({
+      ...prev,
+      current_agent: data.agent_role,
+      message: data.current_task || data.thinking || prev?.message
+    }))
+  }
+
+  const handleArtifactUpdate = (data) => {
+    console.log('Artifact update:', data)
+    const artifact = data.artifact
+    
+    // Update or add artifact
+    setArtifacts(prev => {
+      const existing = prev.find(a => a.name === artifact.name)
+      if (existing) {
+        return prev.map(a => 
+          a.name === artifact.name ? { ...a, ...artifact } : a
+        )
+      } else {
+        return [...prev, artifact]
+      }
+    })
+    
+    // Auto-select first artifact if none selected
+    if (!selectedArtifact && artifact) {
+      setSelectedArtifact(artifact)
+    }
+  }
+
+  const handleStreamingContent = (data) => {
+    console.log('Streaming content:', data)
+    // Handle streaming content updates
+    // This could be used to show real-time content generation
+  }
+
+  const handleGenericMessage = (data) => {
+    console.log('WebSocket message:', data)
+    
+    // Handle different message formats
+    if (typeof data === 'string') {
+      try {
         data = JSON.parse(data)
+      } catch (e) {
+        console.log('Non-JSON message:', data)
+        return
       }
-      
-      if (data.type === 'progress_update') {
-        setStatus(prev => ({
-          ...prev,
-          status: data.status,
-          progress: data.progress,
-          message: data.message
-        }))
-        
-        // If completed, load artifacts
-        if (data.status === 'completed') {
-          loadArtifacts()
-        }
-      } else if (data.type === 'artifact_update') {
-        // Update or add artifact
-        setArtifacts(prev => {
-          const existing = prev.find(artifact => artifact.id === data.artifact.id)
-          if (existing) {
-            return prev.map(artifact => 
-              artifact.id === data.artifact.id ? { ...artifact, ...data.artifact } : artifact
-            )
-          } else {
-            return [...prev, data.artifact]
-          }
-        })
-        
-        // Auto-select first artifact if none selected
-        if (!selectedArtifact && data.artifact) {
-          setSelectedArtifact(data.artifact)
-        }
-      }
-    } catch (error) {
-      console.error('Error handling WebSocket message:', error)
+    }
+    
+    // Route based on message type
+    switch (data.type) {
+      case 'progress_update':
+        handleProgressUpdate(data)
+        break
+      case 'agent_update':
+        handleAgentUpdate(data)
+        break
+      case 'artifact_update':
+        handleArtifactUpdate(data)
+        break
+      case 'streaming_content':
+        handleStreamingContent(data)
+        break
+      case 'connection':
+        console.log('WebSocket connected:', data.message)
+        break
+      case 'heartbeat':
+        // Heartbeat received, connection is alive
+        break
+      default:
+        console.log('Unknown message type:', data.type, data)
+    }
+  }
+
+  const handleWebSocketError = (error) => {
+    console.error('WebSocket error:', error)
+    toast.error('Real-time connection lost, using polling instead')
+    
+    // Start polling as fallback
+    if (!pollingInterval) {
+      startPolling()
+    }
+  }
+
+  const handleWebSocketClose = () => {
+    console.log('WebSocket connection closed')
+    
+    // Start polling as fallback if generation is still running
+    if (status && (status.status === 'running' || status.status === 'started') && !pollingInterval) {
+      startPolling()
     }
   }
 
@@ -121,18 +237,21 @@ const Results = () => {
     try {
       const artifactsData = await getGenerationArtifacts(generationId)
       setArtifacts(artifactsData)
+      
+      // Auto-select first artifact if none selected
+      if (artifactsData.length > 0 && !selectedArtifact) {
+        setSelectedArtifact(artifactsData[0])
+      }
     } catch (error) {
       console.error('Failed to load artifacts:', error)
     }
   }
 
   const handleSandboxReady = (sandbox) => {
-    setSandboxReady(true)
     console.log('E2B Sandbox ready:', sandbox)
   }
 
   const handlePreviewUpdate = (info) => {
-    setPreviewInfo(info)
     console.log('Preview updated:', info)
     toast.success(`Live preview ready: ${info.type} application`)
   }
@@ -176,12 +295,12 @@ const Results = () => {
     )
   }
 
-  // Show simple progress while generation is in progress
+  // Show progress while generation is in progress
   if (status && (status.status === 'running' || status.status === 'started')) {
     return (
       <div className="min-h-screen py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Simple Header */}
+          {/* Header */}
           <div className="mb-8">
             <Link 
               to="/generate" 
@@ -213,7 +332,7 @@ const Results = () => {
             </div>
           </div>
 
-          {/* Clean Progress Bar */}
+          {/* Progress Bar */}
           <div className="mb-8">
             <div className="w-full bg-secondary-200 rounded-full h-2">
               <motion.div
@@ -226,7 +345,38 @@ const Results = () => {
             {status.message && (
               <p className="text-secondary-700 mt-2 text-center">{status.message}</p>
             )}
+            {status.current_agent && (
+              <p className="text-primary-600 mt-1 text-center text-sm">
+                Current Agent: {status.current_agent.replace('_', ' ').toUpperCase()}
+              </p>
+            )}
           </div>
+
+          {/* Show artifacts as they become available */}
+          {artifacts.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold text-secondary-900 mb-4">
+                Generated Artifacts ({artifacts.length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {artifacts.map((artifact, index) => (
+                  <div key={index} className="card p-4">
+                    <div className="flex items-center space-x-3">
+                      <FileText className="h-5 w-5 text-primary-500" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-secondary-900 truncate">
+                          {artifact.name}
+                        </p>
+                        <p className="text-sm text-secondary-600">
+                          {artifact.agent_role?.replace('_', ' ')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* E2B Sandbox Preview */}
           <E2BSandboxPreview
@@ -291,7 +441,7 @@ const Results = () => {
             <div className="lg:col-span-1">
               <div className="card">
                 <h2 className="text-xl font-semibold text-secondary-900 mb-4">
-                  Generated Artifacts
+                  Generated Artifacts ({artifacts.length})
                 </h2>
                 <div className="space-y-2">
                   {artifacts.map((artifact, index) => (

@@ -4,31 +4,59 @@ MetaGPT service for multi-agent app generation
 
 import asyncio
 import uuid
-from typing import Dict, List, Optional, AsyncGenerator
+import os
+import tempfile
+import shutil
+from typing import Dict, List, Optional
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from app.models.schemas import (
-    GenerationRequest, AgentRole, GeneratedArtifact, 
-    AgentUpdate, AppType, BedrockModel
+    GenerationRequest, AgentRole, GeneratedArtifact
 )
-from app.services.bedrock_client import bedrock_client
 from app.services.websocket_manager import websocket_manager
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 class MetaGPTService:
-    """Service for orchestrating MetaGPT agents with Bedrock models"""
+    """Service for orchestrating real MetaGPT agents"""
     
     def __init__(self):
         self.active_generations: Dict[str, Dict] = {}
+        self._setup_metagpt()
+    
+    def _setup_metagpt(self):
+        """Initialize MetaGPT configuration"""
+        try:
+            # Set up MetaGPT environment variables
+            if settings.OPENAI_API_KEY:
+                os.environ["OPENAI_API_KEY"] = settings.OPENAI_API_KEY
+            if settings.ANTHROPIC_API_KEY:
+                os.environ["ANTHROPIC_API_KEY"] = settings.ANTHROPIC_API_KEY
+            if settings.METAGPT_API_KEY:
+                os.environ["METAGPT_API_KEY"] = settings.METAGPT_API_KEY
+            
+            # Set workspace
+            os.environ["METAGPT_WORKSPACE"] = settings.METAGPT_WORKSPACE
+            os.environ["METAGPT_LOG_LEVEL"] = settings.METAGPT_LOG_LEVEL
+            
+            # Create workspace directory if it doesn't exist
+            workspace_path = Path(settings.METAGPT_WORKSPACE)
+            workspace_path.mkdir(parents=True, exist_ok=True)
+            
+            logger.info("✅ MetaGPT configuration initialized")
+            
+        except Exception as e:
+            logger.error(f"Failed to setup MetaGPT: {e}")
     
     async def generate_app(
         self, 
         request: GenerationRequest, 
         client_id: Optional[str] = None
     ) -> str:
-        """Start app generation process"""
+        """Start app generation process using real MetaGPT"""
         generation_id = str(uuid.uuid4())
         
         # Store generation info
@@ -38,319 +66,276 @@ class MetaGPTService:
             "progress": 0,
             "artifacts": [],
             "client_id": client_id,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
+            "workspace_path": None
         }
         
         # Start generation in background
-        asyncio.create_task(self._run_generation(generation_id))
+        asyncio.create_task(self._run_metagpt_generation(generation_id))
         
         return generation_id
     
-    async def _run_generation(self, generation_id: str):
-        """Run the complete generation process"""
+    async def _run_metagpt_generation(self, generation_id: str):
+        """Run the complete generation process using MetaGPT"""
         try:
             generation_data = self.active_generations[generation_id]
             request = generation_data["request"]
             client_id = generation_data.get("client_id")
             
             # Update status
-            await self._update_progress(generation_id, "initializing", 5, "Initializing agents...")
+            await self._update_progress(generation_id, "initializing", 5, "Initializing MetaGPT...")
             
-            # Run agents in sequence
-            agents_to_run = request.active_agents
-            total_agents = len(agents_to_run)
+            # Import MetaGPT components
+            from metagpt.software_company import SoftwareCompany
+            from metagpt.team import Team
+            from metagpt.roles import ProductManager, Architect, ProjectManager, Engineer, QaEngineer
             
-            for i, agent_role in enumerate(agents_to_run):
-                progress = 10 + (i * 80 // total_agents)
-                await self._run_agent(generation_id, agent_role, progress)
+            # Create workspace for this generation
+            workspace_path = Path(settings.METAGPT_WORKSPACE) / generation_id
+            workspace_path.mkdir(parents=True, exist_ok=True)
+            generation_data["workspace_path"] = str(workspace_path)
             
-            # Finalize
-            await self._update_progress(generation_id, "completed", 100, "Generation completed!")
+            await self._update_progress(generation_id, "running", 10, "Setting up MetaGPT team...")
             
-        except Exception as e:
-            logger.error(f"Generation {generation_id} failed: {e}")
-            await self._update_progress(generation_id, "failed", 0, f"Generation failed: {str(e)}")
-    
-    async def _run_agent(self, generation_id: str, agent_role: AgentRole, base_progress: int):
-        """Run a specific agent"""
-        generation_data = self.active_generations[generation_id]
-        request = generation_data["request"]
-        client_id = generation_data.get("client_id")
-        
-        # Update progress
-        await self._update_progress(
-            generation_id, 
-            "running", 
-            base_progress, 
-            f"Running {agent_role.value.replace('_', ' ').title()}...",
-            current_agent=agent_role.value
-        )
-        
-        # Send agent-specific update
-        if client_id:
-            await websocket_manager.send_agent_update(
-                client_id,
-                agent_role.value,
-                "running",
-                current_task=f"Starting {agent_role.value.replace('_', ' ').title()} analysis...",
-                progress=base_progress
-            )
+            # Create team based on selected agents
+            team_roles = []
+            role_mapping = {
+                AgentRole.PRODUCT_MANAGER: ProductManager,
+                AgentRole.ARCHITECT: Architect,
+                AgentRole.PROJECT_MANAGER: ProjectManager,
+                AgentRole.ENGINEER: Engineer,
+                AgentRole.QA_ENGINEER: QaEngineer
+            }
             
-            # Send thinking update
-            await websocket_manager.send_agent_update(
-                client_id,
-                agent_role.value,
-                "running",
-                thinking=f"Analyzing requirements and preparing {agent_role.value.replace('_', ' ')} deliverables..."
-            )
-        
-        # Simulate streaming content generation
-        if client_id:
-            await self._simulate_streaming_generation(client_id, agent_role, request)
-        
-        # Generate agent-specific content
-        artifact = await self._generate_agent_artifact(request, agent_role)
-        
-        if artifact:
-            generation_data["artifacts"].append(artifact)
+            for agent_role in request.active_agents:
+                if agent_role in role_mapping:
+                    team_roles.append(role_mapping[agent_role]())
             
-            # Send artifact update
+            # Create software company
+            company = SoftwareCompany()
+            company.hire(team_roles)
+            
+            await self._update_progress(generation_id, "running", 20, "Starting MetaGPT generation...")
+            
+            # Send real-time updates
             if client_id:
-                await websocket_manager.send_artifact_update(
+                await websocket_manager.send_message(
                     client_id,
                     {
-                        "id": f"{agent_role.value}_{generation_id}",
-                        "name": artifact.name,
-                        "type": artifact.type,
-                        "content": artifact.content,
-                        "agent_role": agent_role.value,
-                        "status": "completed",
-                        "progress": 100
+                        "type": "agent_update",
+                        "agent": "metagpt_orchestrator",
+                        "status": "running",
+                        "message": f"Running MetaGPT with {len(team_roles)} agents",
+                        "progress": 25
                     }
                 )
             
-            # Send completion update
-            if client_id:
-                await websocket_manager.send_agent_update(
-                    client_id,
-                    agent_role.value,
-                    "completed",
-                    current_task=f"{agent_role.value.replace('_', ' ').title()} completed",
-                    progress=base_progress + 10
-                )
+            # Run MetaGPT generation
+            await self._run_metagpt_company(company, request, generation_id, workspace_path)
+            
+            # Process generated artifacts
+            await self._process_metagpt_artifacts(generation_id, workspace_path)
+            
+            # Finalize
+            await self._update_progress(generation_id, "completed", 100, "MetaGPT generation completed!")
+            
+        except Exception as e:
+            logger.error(f"MetaGPT generation {generation_id} failed: {e}")
+            await self._update_progress(generation_id, "failed", 0, f"Generation failed: {str(e)}")
+            
+            # Cleanup on failure
+            try:
+                self.cleanup_generation(generation_id)
+            except Exception as cleanup_error:
+                logger.error(f"Cleanup failed for {generation_id}: {cleanup_error}")
     
-    async def _simulate_streaming_generation(self, client_id: str, agent_role: AgentRole, request: GenerationRequest):
-        """Simulate streaming content generation for real-time preview"""
-        artifact_name = self._get_artifact_name(agent_role)
-        
-        # Simulate streaming chunks
-        streaming_chunks = [
-            f"# {artifact_name}\n\n",
-            f"## Overview\n\nAnalyzing requirements for {request.app_type.value}...\n\n",
-            f"### Key Requirements\n- {request.requirement[:50]}...\n\n",
-            "### Analysis in Progress\n\nGenerating detailed analysis...\n\n",
-            "### Recommendations\n\nPreparing recommendations based on requirements...\n\n"
-        ]
-        
-        accumulated_content = ""
-        for i, chunk in enumerate(streaming_chunks):
-            accumulated_content += chunk
-            await websocket_manager.send_streaming_content(
-                client_id,
-                accumulated_content,
-                agent_role.value,
-                artifact_name
+    async def _run_metagpt_company(self, company, request: GenerationRequest, generation_id: str, workspace_path: Path):
+        """Run the MetaGPT software company"""
+        try:
+            client_id = self.active_generations[generation_id].get("client_id")
+            
+            # Prepare the requirement with context
+            enhanced_requirement = self._enhance_requirement(request)
+            
+            await self._update_progress(generation_id, "running", 30, "MetaGPT agents analyzing requirements...")
+            
+            # Set workspace for this generation
+            os.environ["METAGPT_WORKSPACE"] = str(workspace_path)
+            
+            # Run the company with the requirement in executor to avoid blocking
+            def run_metagpt_sync():
+                try:
+                    # This is the actual MetaGPT execution
+                    return company.run_project(enhanced_requirement)
+                except Exception as e:
+                    logger.error(f"MetaGPT execution error: {e}")
+                    raise
+            
+            # Execute MetaGPT in thread pool to avoid blocking event loop
+            result = await asyncio.get_event_loop().run_in_executor(
+                None,
+                run_metagpt_sync
             )
-            # Small delay to simulate real streaming
-            await asyncio.sleep(0.5)
+            
+            # Send progress updates during execution
+            progress_steps = [40, 50, 60, 70, 80, 90]
+            agent_names = ["Product Manager", "Architect", "Project Manager", "Engineer", "QA Engineer"]
+            
+            for i, (progress, agent_name) in enumerate(zip(progress_steps, agent_names)):
+                if client_id:
+                    await websocket_manager.send_agent_update(
+                        client_id,
+                        agent_name.lower().replace(" ", "_"),
+                        "running" if i < len(progress_steps) - 1 else "completed",
+                        current_task=f"{agent_name} working on requirements",
+                        progress=progress
+                    )
+                await asyncio.sleep(0.5)  # Small delay for realistic progress
+            
+            logger.info(f"✅ MetaGPT company execution completed for {generation_id}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"MetaGPT company execution failed: {e}")
+            # Send error update via WebSocket
+            client_id = self.active_generations[generation_id].get("client_id")
+            if client_id:
+                await websocket_manager.send_error(
+                    client_id,
+                    f"MetaGPT execution failed: {str(e)}",
+                    "metagpt_error"
+                )
+            raise
     
-    def _get_artifact_name(self, agent_role: AgentRole) -> str:
-        """Get artifact name for agent role"""
-        artifact_names = {
-            AgentRole.PRODUCT_MANAGER: "Product Requirements Document",
-            AgentRole.ARCHITECT: "System Architecture Design",
-            AgentRole.PROJECT_MANAGER: "Project Plan & Timeline",
-            AgentRole.ENGINEER: "Technical Implementation",
-            AgentRole.QA_ENGINEER: "Test Strategy & Cases",
-            AgentRole.DEVOPS: "Deployment & Infrastructure"
+    def _enhance_requirement(self, request: GenerationRequest) -> str:
+        """Enhance the requirement with additional context"""
+        enhanced = f"""
+Project Requirement: {request.requirement}
+
+Application Type: {request.app_type.value}
+Target Technology Stack: {', '.join(request.tech_stack) if request.tech_stack else 'Modern web technologies'}
+
+Additional Context:
+- Create a complete, production-ready application
+- Include proper error handling and validation
+- Follow best practices for the chosen technology stack
+- Generate comprehensive documentation
+- Include testing strategies where applicable
+
+Please create a full application that meets these requirements with proper architecture and implementation.
+"""
+        return enhanced.strip()
+    
+    async def _process_metagpt_artifacts(self, generation_id: str, workspace_path: Path):
+        """Process artifacts generated by MetaGPT"""
+        try:
+            generation_data = self.active_generations[generation_id]
+            client_id = generation_data.get("client_id")
+            
+            await self._update_progress(generation_id, "processing", 95, "Processing generated artifacts...")
+            
+            # Find all generated files in the workspace
+            artifacts = []
+            
+            # Common file patterns to look for
+            file_patterns = [
+                "**/*.md",    # Documentation
+                "**/*.py",    # Python code
+                "**/*.js",    # JavaScript
+                "**/*.jsx",   # React
+                "**/*.ts",    # TypeScript
+                "**/*.tsx",   # TypeScript React
+                "**/*.html",  # HTML
+                "**/*.css",   # CSS
+                "**/*.json",  # Configuration
+                "**/*.yml",   # YAML configs
+                "**/*.yaml",  # YAML configs
+                "**/*.txt",   # Text files
+            ]
+            
+            for pattern in file_patterns:
+                for file_path in workspace_path.glob(pattern):
+                    if file_path.is_file() and file_path.stat().st_size > 0:
+                        try:
+                            content = file_path.read_text(encoding='utf-8')
+                            
+                            # Determine artifact type
+                            artifact_type = self._determine_artifact_type(file_path)
+                            
+                            # Create artifact
+                            artifact = GeneratedArtifact(
+                                id=str(uuid.uuid4()),
+                                name=file_path.name,
+                                type=artifact_type,
+                                content=content,
+                                agent_role=self._determine_agent_role(file_path),
+                                file_path=str(file_path.relative_to(workspace_path))
+                            )
+                            
+                            artifacts.append(artifact)
+                            
+                            # Send artifact update
+                            if client_id:
+                                await websocket_manager.send_artifact_update(
+                                    client_id,
+                                    {
+                                        "id": artifact.id,
+                                        "name": artifact.name,
+                                        "type": artifact.type,
+                                        "content": artifact.content,
+                                        "agent_role": artifact.agent_role,
+                                        "status": "completed",
+                                        "progress": 100
+                                    }
+                                )
+                            
+                        except Exception as e:
+                            logger.warning(f"Could not read file {file_path}: {e}")
+            
+            # Store artifacts
+            generation_data["artifacts"] = artifacts
+            
+            logger.info(f"✅ Processed {len(artifacts)} artifacts for generation {generation_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to process MetaGPT artifacts: {e}")
+    
+    def _determine_artifact_type(self, file_path: Path) -> str:
+        """Determine artifact type based on file extension"""
+        suffix = file_path.suffix.lower()
+        type_mapping = {
+            '.md': 'documentation',
+            '.py': 'code',
+            '.js': 'code',
+            '.jsx': 'code',
+            '.ts': 'code',
+            '.tsx': 'code',
+            '.html': 'code',
+            '.css': 'code',
+            '.json': 'configuration',
+            '.yml': 'configuration',
+            '.yaml': 'configuration',
+            '.txt': 'documentation'
         }
-        return artifact_names.get(agent_role, "Document")
+        return type_mapping.get(suffix, 'file')
     
-    async def _generate_agent_artifact(
-        self, 
-        request: GenerationRequest, 
-        agent_role: AgentRole
-    ) -> Optional[GeneratedArtifact]:
-        """Generate artifact for specific agent role"""
+    def _determine_agent_role(self, file_path: Path) -> str:
+        """Determine which agent likely created this artifact"""
+        file_name = file_path.name.lower()
+        path_str = str(file_path).lower()
         
-        # Define agent-specific prompts
-        prompts = {
-            AgentRole.PRODUCT_MANAGER: self._get_pm_prompt(request),
-            AgentRole.ARCHITECT: self._get_architect_prompt(request),
-            AgentRole.PROJECT_MANAGER: self._get_project_manager_prompt(request),
-            AgentRole.ENGINEER: self._get_engineer_prompt(request),
-            AgentRole.QA_ENGINEER: self._get_qa_prompt(request),
-            AgentRole.DEVOPS: self._get_devops_prompt(request)
-        }
-        
-        prompt = prompts.get(agent_role)
-        if not prompt:
-            return None
-        
-        # Generate content using Bedrock
-        content = await bedrock_client.invoke_model(
-            request.preferred_model,
-            prompt,
-            max_tokens=3000
-        )
-        
-        if not content:
-            return None
-        
-        # Create artifact
-        artifact_names = {
-            AgentRole.PRODUCT_MANAGER: "Product Requirements Document",
-            AgentRole.ARCHITECT: "System Architecture Design",
-            AgentRole.PROJECT_MANAGER: "Project Plan & Timeline",
-            AgentRole.ENGINEER: "Technical Implementation",
-            AgentRole.QA_ENGINEER: "Test Strategy & Cases",
-            AgentRole.DEVOPS: "Deployment & Infrastructure"
-        }
-        
-        return GeneratedArtifact(
-            name=artifact_names[agent_role],
-            type="document",
-            content=content,
-            agent_role=agent_role
-        )
-    
-    def _get_pm_prompt(self, request: GenerationRequest) -> str:
-        """Generate Product Manager prompt"""
-        return f"""
-As a Product Manager, analyze this requirement and create a comprehensive Product Requirements Document (PRD):
-
-Requirement: {request.requirement}
-App Type: {request.app_type.value}
-Additional Requirements: {request.additional_requirements or 'None'}
-
-Please provide:
-1. Executive Summary
-2. User Stories (with acceptance criteria)
-3. Functional Requirements
-4. Non-functional Requirements
-5. Success Metrics
-6. Risk Assessment
-7. Competitive Analysis (brief)
-
-Format as a structured document with clear sections.
-"""
-    
-    def _get_architect_prompt(self, request: GenerationRequest) -> str:
-        """Generate System Architect prompt"""
-        return f"""
-As a System Architect, design the technical architecture for this application:
-
-Requirement: {request.requirement}
-App Type: {request.app_type.value}
-Tech Preferences: {', '.join(request.tech_stack_preferences or [])}
-
-Please provide:
-1. High-level Architecture Overview
-2. Technology Stack Recommendations
-3. System Components & Services
-4. Data Architecture & Database Design
-5. API Design Patterns
-6. Security Considerations
-7. Scalability & Performance Strategy
-8. Integration Points
-
-Include architectural diagrams in text format where helpful.
-"""
-    
-    def _get_project_manager_prompt(self, request: GenerationRequest) -> str:
-        """Generate Project Manager prompt"""
-        return f"""
-As a Project Manager, create a detailed project plan for this application:
-
-Requirement: {request.requirement}
-App Type: {request.app_type.value}
-
-Please provide:
-1. Project Timeline & Milestones
-2. Task Breakdown Structure
-3. Resource Requirements
-4. Risk Management Plan
-5. Communication Plan
-6. Quality Assurance Process
-7. Delivery Schedule
-8. Success Criteria & KPIs
-
-Format as a actionable project plan.
-"""
-    
-    def _get_engineer_prompt(self, request: GenerationRequest) -> str:
-        """Generate Engineer prompt"""
-        return f"""
-As a Software Engineer, provide technical implementation details for this application:
-
-Requirement: {request.requirement}
-App Type: {request.app_type.value}
-Tech Preferences: {', '.join(request.tech_stack_preferences or [])}
-
-Please provide:
-1. Detailed Technical Specifications
-2. Code Structure & Organization
-3. Key Algorithms & Logic
-4. Database Schema Design
-5. API Endpoints Specification
-6. Third-party Integrations
-7. Performance Optimization Strategies
-8. Code Examples (pseudo-code or actual code snippets)
-
-Focus on practical implementation details.
-"""
-    
-    def _get_qa_prompt(self, request: GenerationRequest) -> str:
-        """Generate QA Engineer prompt"""
-        return f"""
-As a QA Engineer, create a comprehensive testing strategy for this application:
-
-Requirement: {request.requirement}
-App Type: {request.app_type.value}
-
-Please provide:
-1. Test Strategy Overview
-2. Test Cases (Unit, Integration, E2E)
-3. Performance Testing Plan
-4. Security Testing Approach
-5. User Acceptance Testing Criteria
-6. Test Automation Strategy
-7. Bug Tracking & Reporting Process
-8. Quality Metrics & KPIs
-
-Include specific test scenarios and edge cases.
-"""
-    
-    def _get_devops_prompt(self, request: GenerationRequest) -> str:
-        """Generate DevOps prompt"""
-        return f"""
-As a DevOps Engineer, design the deployment and infrastructure strategy for this application:
-
-Requirement: {request.requirement}
-App Type: {request.app_type.value}
-
-Please provide:
-1. Infrastructure Architecture
-2. Deployment Strategy (CI/CD)
-3. Environment Configuration
-4. Monitoring & Logging Setup
-5. Backup & Disaster Recovery
-6. Security & Compliance
-7. Scaling Strategy
-8. Cost Optimization
-
-Include specific tools and technologies recommendations.
-"""
+        if any(keyword in file_name for keyword in ['requirements', 'prd', 'product']):
+            return 'product_manager'
+        elif any(keyword in file_name for keyword in ['architecture', 'design', 'system']):
+            return 'architect'
+        elif any(keyword in file_name for keyword in ['project', 'plan', 'timeline']):
+            return 'project_manager'
+        elif any(keyword in path_str for keyword in ['test', 'spec', 'qa']):
+            return 'qa_engineer'
+        elif any(keyword in file_name for keyword in ['deploy', 'docker', 'ci', 'cd']):
+            return 'devops'
+        else:
+            return 'engineer'
     
     async def _update_progress(
         self, 
@@ -358,52 +343,54 @@ Include specific tools and technologies recommendations.
         status: str, 
         progress: int, 
         message: str,
-        current_agent: Optional[str] = None,
-        estimated_time: Optional[str] = None
+        current_agent: Optional[str] = None
     ):
         """Update generation progress"""
         if generation_id in self.active_generations:
-            self.active_generations[generation_id].update({
+            generation_data = self.active_generations[generation_id]
+            generation_data.update({
                 "status": status,
                 "progress": progress,
                 "last_message": message,
-                "current_agent": current_agent,
                 "updated_at": datetime.now()
             })
             
-            # Send WebSocket update if client connected
-            client_id = self.active_generations[generation_id].get("client_id")
+            if current_agent:
+                generation_data["current_agent"] = current_agent
+            
+            # Send WebSocket update
+            client_id = generation_data.get("client_id")
             if client_id:
-                # Calculate estimated time based on progress
-                if not estimated_time and progress > 0:
-                    start_time = self.active_generations[generation_id].get("created_at")
-                    if start_time:
-                        elapsed = (datetime.now() - start_time).total_seconds()
-                        if progress > 10:  # Only estimate after some progress
-                            total_estimated = (elapsed / progress) * 100
-                            remaining = total_estimated - elapsed
-                            estimated_time = f"{int(remaining // 60)}m {int(remaining % 60)}s"
-                
                 await websocket_manager.send_progress_update(
                     client_id,
                     generation_id,
                     status,
                     progress,
-                    message,
-                    current_agent,
-                    estimated_time
+                    message
                 )
     
     def get_generation_status(self, generation_id: str) -> Optional[Dict]:
-        """Get current generation status"""
+        """Get generation status"""
         return self.active_generations.get(generation_id)
     
     def get_generation_artifacts(self, generation_id: str) -> List[GeneratedArtifact]:
-        """Get generated artifacts for a generation"""
+        """Get generation artifacts"""
         generation_data = self.active_generations.get(generation_id)
         if generation_data:
             return generation_data.get("artifacts", [])
         return []
+    
+    def cleanup_generation(self, generation_id: str):
+        """Clean up generation workspace"""
+        try:
+            generation_data = self.active_generations.get(generation_id)
+            if generation_data and generation_data.get("workspace_path"):
+                workspace_path = Path(generation_data["workspace_path"])
+                if workspace_path.exists():
+                    shutil.rmtree(workspace_path)
+                    logger.info(f"✅ Cleaned up workspace for generation {generation_id}")
+        except Exception as e:
+            logger.error(f"Failed to cleanup generation {generation_id}: {e}")
 
-# Global instance
+# Global service instance
 metagpt_service = MetaGPTService()

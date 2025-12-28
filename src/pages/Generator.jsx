@@ -44,7 +44,7 @@ const Generator = () => {
         ...prev,
         active_agents: rolesData.roles?.map(role => role.id) || []
       }))
-    } catch (error) {
+    } catch {
       toast.error('Failed to load initial data')
     }
   }

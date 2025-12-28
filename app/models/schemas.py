@@ -3,7 +3,7 @@ Pydantic models for API requests and responses
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from enum import Enum
 from datetime import datetime
 
@@ -91,3 +91,4 @@ class HealthCheck(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     aws_bedrock_available: bool = False
     metagpt_configured: bool = False
+    e2b_configured: bool = False
