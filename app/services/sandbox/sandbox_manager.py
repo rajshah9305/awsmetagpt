@@ -26,15 +26,25 @@ class SandboxManager:
         self.process_managers: Dict[str, ProcessManager] = {}
         self.file_managers: Dict[str, SandboxFileManager] = {}
         self.cleanup_task = None
-        self._start_background_tasks()
+        self._background_tasks_started = False
     
     def _start_background_tasks(self):
         """Start background maintenance tasks"""
-        if not self.cleanup_task:
-            self.cleanup_task = asyncio.create_task(self._cleanup_loop())
+        if not self._background_tasks_started:
+            try:
+                if not self.cleanup_task:
+                    self.cleanup_task = asyncio.create_task(self._cleanup_loop())
+                self._background_tasks_started = True
+            except RuntimeError:
+                # No event loop running, tasks will be started when needed
+                pass
     
     async def create_sandbox(self, session_id: str, config: Optional[SandboxConfig] = None) -> str:
         """Create a new sandbox"""
+        # Start background tasks if not already started
+        if not self._background_tasks_started:
+            self._start_background_tasks()
+            
         sandbox_id = f"sb_{session_id}_{str(uuid.uuid4())[:8]}"
         
         try:

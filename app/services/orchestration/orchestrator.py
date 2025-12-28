@@ -33,14 +33,20 @@ class AgentOrchestrator:
         # Setup callbacks
         self.agent_manager.add_state_change_callback(self._on_agent_state_change)
         
-        # Background tasks
+        # Background tasks (will be started when needed)
         self._cleanup_task = None
-        self._start_background_tasks()
+        self._background_tasks_started = False
     
     def _start_background_tasks(self):
         """Start background maintenance tasks"""
-        if not self._cleanup_task:
-            self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+        if not self._background_tasks_started:
+            try:
+                if not self._cleanup_task:
+                    self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+                self._background_tasks_started = True
+            except RuntimeError:
+                # No event loop running, tasks will be started when needed
+                pass
     
     async def create_session(
         self, 
@@ -48,6 +54,9 @@ class AgentOrchestrator:
         client_id: Optional[str] = None
     ) -> str:
         """Create a new orchestration session"""
+        # Start background tasks if not already started
+        if not self._background_tasks_started:
+            self._start_background_tasks()
         session_id = str(uuid.uuid4())
         
         try:

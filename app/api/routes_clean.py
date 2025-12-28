@@ -388,9 +388,3 @@ def _get_role_description(role) -> str:
     }
     return descriptions.get(role.value, "Specialized agent role")
 
-
-# Add error handler
-@router.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """Global exception handler"""
-    return error_handler.create_error_response(exc)

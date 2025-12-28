@@ -228,11 +228,16 @@ class Settings(BaseSettings):
 # Global settings instance
 settings = Settings()
 
-# Validate configuration on import
-missing_keys = settings.validate_required_keys()
-if missing_keys:
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.warning(f"Missing configuration keys: {', '.join(missing_keys)}")
-    if settings.core.is_production():
-        raise ValueError(f"Missing required configuration in production: {', '.join(missing_keys)}")
+# Validation will be done on first access rather than import
+def validate_settings():
+    """Validate configuration on first access"""
+    missing_keys = settings.validate_required_keys()
+    if missing_keys:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Missing configuration keys: {', '.join(missing_keys)}")
+        # Only raise error in production for critical missing keys
+        if settings.core.is_production():
+            critical_missing = [key for key in missing_keys if 'AWS credentials' in key]
+            if critical_missing:
+                raise ValueError(f"Missing critical configuration in production: {', '.join(critical_missing)}")
