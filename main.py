@@ -379,10 +379,12 @@ if __name__ == "__main__":
     import uvicorn
     
     # Enhanced uvicorn configuration
+    # Use PORT from environment (Railway) or fall back to settings
+    port = int(os.getenv("PORT", settings.APP_PORT))
     uvicorn_config = {
         "app": "main:app",
         "host": settings.APP_HOST,
-        "port": settings.APP_PORT,
+        "port": port,
         "reload": settings.RELOAD_ON_CHANGE and settings.DEBUG,
         "log_level": settings.LOG_LEVEL.lower(),
         "access_log": True,
@@ -397,5 +399,5 @@ if __name__ == "__main__":
             "http": "httptools"
         })
     
-    logger.info(f"🚀 Starting server on {settings.APP_HOST}:{settings.APP_PORT}")
+    logger.info(f"🚀 Starting server on {settings.APP_HOST}:{port}")
     uvicorn.run(**uvicorn_config)
