@@ -5,13 +5,14 @@ MetaGPT execution and integration
 import asyncio
 import os
 import yaml
+import json
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 from app.core.logging import get_logger
 from app.core.exceptions import MetaGPTException
-from app.core.config_clean import settings
+from app.core.config import settings
 from app.models.schemas import AgentRole, GenerationRequest, BedrockModel
 from .models import AgentTask, AgentInstance
 
@@ -36,12 +37,12 @@ class MetaGPTExecutor:
             bedrock_config = {
                 "llm": {
                     "api_type": "bedrock",
-                    "model": settings.bedrock.BEDROCK_MODEL,
-                    "aws_access_key_id": settings.aws.AWS_ACCESS_KEY_ID,
-                    "aws_secret_access_key": settings.aws.AWS_SECRET_ACCESS_KEY,
-                    "aws_region": settings.aws.AWS_REGION,
-                    "max_tokens": settings.bedrock.BEDROCK_MAX_TOKENS,
-                    "temperature": settings.bedrock.BEDROCK_TEMPERATURE
+                    "model": settings.BEDROCK_MODEL,
+                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                    "aws_region": settings.AWS_REGION,
+                    "max_tokens": 4000,
+                    "temperature": 0.7
                 }
             }
             
@@ -50,18 +51,18 @@ class MetaGPTExecutor:
                 yaml.dump(bedrock_config, f, default_flow_style=False)
             
             # Set environment variables
-            env_vars = settings.metagpt.get_env_vars()
+            env_vars = settings.get_env_vars()
             for key, value in env_vars.items():
                 os.environ[key] = value
             
             # Create workspace directory
-            workspace_path = Path(settings.metagpt.METAGPT_WORKSPACE)
+            workspace_path = Path(settings.METAGPT_WORKSPACE)
             if not workspace_path.is_absolute():
                 workspace_path = Path.cwd() / workspace_path
             workspace_path.mkdir(parents=True, exist_ok=True)
             
             self.metagpt_configured = True
-            logger.info(f"MetaGPT configured with model: {settings.bedrock.BEDROCK_MODEL}")
+            logger.info(f"MetaGPT configured with model: {settings.BEDROCK_MODEL}")
             
         except Exception as e:
             logger.error(f"Failed to setup MetaGPT: {e}")
@@ -90,11 +91,11 @@ class MetaGPTExecutor:
                 "llm": {
                     "api_type": "bedrock",
                     "model": metagpt_model,
-                    "aws_access_key_id": settings.aws.AWS_ACCESS_KEY_ID,
-                    "aws_secret_access_key": settings.aws.AWS_SECRET_ACCESS_KEY,
-                    "aws_region": settings.aws.AWS_REGION,
-                    "max_tokens": settings.bedrock.BEDROCK_MAX_TOKENS,
-                    "temperature": settings.bedrock.BEDROCK_TEMPERATURE
+                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                    "aws_region": settings.AWS_REGION,
+                    "max_tokens": 4000,
+                    "temperature": 0.7
                 }
             }
             
@@ -119,7 +120,7 @@ class MetaGPTExecutor:
         
         try:
             # Update model if different from current
-            if request.preferred_model != BedrockModel(settings.bedrock.BEDROCK_MODEL):
+            if request.preferred_model != BedrockModel(settings.BEDROCK_MODEL):
                 self.update_model(request.preferred_model)
             
             # Import MetaGPT (lazy import to avoid startup issues)
@@ -211,7 +212,7 @@ Please generate a complete, production-ready application with:
         
         try:
             # Get workspace path
-            workspace_path = Path(settings.metagpt.METAGPT_WORKSPACE) / session_id
+            workspace_path = Path(settings.METAGPT_WORKSPACE) / session_id
             
             if workspace_path.exists():
                 # Process generated files

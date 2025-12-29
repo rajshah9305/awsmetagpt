@@ -10,7 +10,7 @@ from datetime import datetime
 
 from app.core.logging import get_logger
 from app.core.exceptions import SandboxException
-from app.core.config_clean import settings
+from app.core.config import settings
 
 logger = get_logger(__name__)
 
@@ -34,8 +34,8 @@ class SandboxFileManager:
         
         try:
             # Validate file count
-            if len(artifacts) > settings.files.MAX_FILES_PER_SESSION:
-                raise SandboxException(f"Too many files: {len(artifacts)} (max: {settings.files.MAX_FILES_PER_SESSION})")
+            if len(artifacts) > settings.MAX_FILES_PER_SESSION:
+                raise SandboxException(f"Too many files: {len(artifacts)} (max: {settings.MAX_FILES_PER_SESSION})")
             
             # Write each file
             for artifact in artifacts:
@@ -72,7 +72,7 @@ class SandboxFileManager:
         content = artifact['content']
         
         # Validate file size
-        if len(content) > settings.files.MAX_FILE_SIZE:
+        if len(content) > settings.MAX_FILE_SIZE:
             raise SandboxException(f"File {file_name} too large: {len(content)} bytes")
         
         # Sanitize file name

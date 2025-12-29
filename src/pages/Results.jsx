@@ -303,7 +303,7 @@ const Results = () => {
             
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-secondary-900">
+                <h1 className="display-md text-secondary-900">
                   AI Agents at Work
                 </h1>
                 <p className="text-secondary-600 mt-1">
@@ -314,9 +314,9 @@ const Results = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                  <span className="text-sm text-secondary-600">Live</span>
+                  <span className="caption text-secondary-600">Live</span>
                 </div>
-                <div className="text-sm text-secondary-600">
+                <div className="caption text-secondary-600">
                   {Math.round(status.progress || 0)}% Complete
                 </div>
               </div>
@@ -337,7 +337,7 @@ const Results = () => {
               <p className="text-secondary-700 mt-2 text-center">{status.message}</p>
             )}
             {status.current_agent && (
-              <p className="text-primary-600 mt-1 text-center text-sm">
+              <p className="text-primary-600 mt-1 text-center caption">
                 Current Agent: {status.current_agent.replace('_', ' ').toUpperCase()}
               </p>
             )}
@@ -346,7 +346,7 @@ const Results = () => {
           {/* Show artifacts as they become available */}
           {artifacts.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-secondary-900 mb-4">
+              <h2 className="body-xl font-semibold text-secondary-900 mb-4">
                 Generated Artifacts ({artifacts.length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -358,7 +358,7 @@ const Results = () => {
                         <p className="font-medium text-secondary-900 truncate">
                           {artifact.name}
                         </p>
-                        <p className="text-sm text-secondary-600">
+                        <p className="caption text-secondary-600">
                           {artifact.agent_role?.replace('_', ' ')}
                         </p>
                       </div>
@@ -396,7 +396,7 @@ const Results = () => {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-secondary-900">
+              <h1 className="display-md text-secondary-900">
                 Generation Results
               </h1>
               <p className="text-secondary-600 mt-1">
@@ -407,7 +407,7 @@ const Results = () => {
             {status && (
               <div className={`inline-flex items-center px-3 py-1 rounded-full border ${getStatusColor(status.status)}`}>
                 {getStatusIcon(status.status)}
-                <span className="ml-2 text-sm font-medium capitalize">
+                <span className="ml-2 caption font-medium capitalize">
                   {status.status}
                 </span>
               </div>
@@ -431,7 +431,7 @@ const Results = () => {
             {/* Artifacts List */}
             <div className="lg:col-span-1">
               <div className="card">
-                <h2 className="text-xl font-semibold text-secondary-900 mb-4">
+                <h2 className="body-xl font-semibold text-secondary-900 mb-4">
                   Generated Artifacts ({artifacts.length})
                 </h2>
                 <div className="space-y-2">

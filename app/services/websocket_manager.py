@@ -5,11 +5,12 @@ WebSocket manager for real-time communication
 from fastapi import WebSocket
 from typing import Dict, List, Optional, Any
 import json
-import logging
 import asyncio
 from datetime import datetime, timedelta
 
-logger = logging.getLogger(__name__)
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 class WebSocketManager:
     """Manages WebSocket connections for real-time updates"""

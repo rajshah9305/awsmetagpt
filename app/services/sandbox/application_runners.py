@@ -5,6 +5,7 @@ Application runners for different project types
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Any
 import asyncio
+import json
 
 from app.core.logging import get_logger
 from app.core.exceptions import SandboxExecutionException

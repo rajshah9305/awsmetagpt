@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 from app.core.logging import get_logger
 from app.core.exceptions import SandboxException, SandboxCreationException, SandboxExecutionException
-from app.core.config_clean import settings
+from app.core.config import settings
 from .models import SandboxInfo, SandboxState, SandboxConfig
 from .process_manager import ProcessManager
 from .file_manager import SandboxFileManager
@@ -51,10 +51,10 @@ class SandboxManager:
             # Use default config if none provided
             if not config:
                 config = SandboxConfig(
-                    template_id=settings.e2b.E2B_TEMPLATE_ID,
-                    cpu_limit=settings.e2b.E2B_CPU_LIMIT,
-                    memory_limit=settings.e2b.E2B_MEMORY_LIMIT,
-                    timeout=settings.e2b.E2B_TIMEOUT
+                    template_id=settings.E2B_TEMPLATE_ID,
+                    cpu_limit=settings.E2B_CPU_LIMIT,
+                    memory_limit=settings.E2B_MEMORY_LIMIT,
+                    timeout=settings.E2B_TIMEOUT
                 )
             
             # Create sandbox info

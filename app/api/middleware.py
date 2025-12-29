@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.logging import get_logger
 from app.core.exceptions import MetaGPTSystemException, RateLimitException
-from app.core.config_clean import settings
+from app.core.config import settings
 
 logger = get_logger(__name__)
 
@@ -23,8 +23,8 @@ class RateLimiter:
     
     def check_rate_limit(self, client_ip: str, max_requests: int = None, window_seconds: int = None) -> bool:
         """Check if request is within rate limits"""
-        max_requests = max_requests or settings.security.RATE_LIMIT_REQUESTS
-        window_seconds = window_seconds or settings.security.RATE_LIMIT_WINDOW
+        max_requests = max_requests or settings.RATE_LIMIT_REQUESTS
+        window_seconds = window_seconds or settings.RATE_LIMIT_WINDOW
         
         now = time.time()
         window_start = now - window_seconds
@@ -52,12 +52,12 @@ class RateLimiter:
         if client_ip not in self.requests:
             return {
                 'requests_made': 0,
-                'requests_remaining': settings.security.RATE_LIMIT_REQUESTS,
+                'requests_remaining': settings.RATE_LIMIT_REQUESTS,
                 'reset_time': None
             }
         
         now = time.time()
-        window_start = now - settings.security.RATE_LIMIT_WINDOW
+        window_start = now - settings.RATE_LIMIT_WINDOW
         
         # Clean old requests
         recent_requests = [
@@ -66,13 +66,13 @@ class RateLimiter:
         ]
         
         requests_made = len(recent_requests)
-        requests_remaining = max(0, settings.security.RATE_LIMIT_REQUESTS - requests_made)
+        requests_remaining = max(0, settings.RATE_LIMIT_REQUESTS - requests_made)
         
         # Calculate reset time (when oldest request expires)
         reset_time = None
         if recent_requests:
             oldest_request = min(recent_requests)
-            reset_time = oldest_request + settings.security.RATE_LIMIT_WINDOW
+            reset_time = oldest_request + settings.RATE_LIMIT_WINDOW
         
         return {
             'requests_made': requests_made,
@@ -87,7 +87,7 @@ class RequestValidator:
     @staticmethod
     def validate_content_length(request: Request, max_size: int = None) -> None:
         """Validate request content length"""
-        max_size = max_size or settings.security.MAX_REQUEST_SIZE
+        max_size = max_size or settings.MAX_REQUEST_SIZE
         
         content_length = request.headers.get('content-length')
         if content_length and int(content_length) > max_size:
@@ -172,7 +172,7 @@ class ErrorHandler:
         
         # Handle generic exceptions
         else:
-            logger.error(f"Unhandled exception: {error}", error=error)
+            logger.error(f"Unhandled exception: {error}")
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={

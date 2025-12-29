@@ -94,11 +94,11 @@ const About = () => {
             </div>
           </div>
           
-          <h1 className="text-4xl font-bold text-secondary-900 mb-6">
+          <h1 className="display-lg text-secondary-900 mb-6">
             About MetaGPT + Bedrock
           </h1>
           
-          <p className="text-xl text-secondary-600 max-w-3xl mx-auto">
+          <p className="body-xl text-secondary-600 max-w-3xl mx-auto">
             A revolutionary platform that combines MetaGPT&apos;s multi-agent framework with AWS Bedrock&apos;s 
             foundation models to generate complete applications from natural language descriptions.
           </p>
@@ -106,7 +106,7 @@ const About = () => {
 
         {/* How It Works */}
         <section className="mb-16">
-          <h2 className="text-3xl font-bold text-secondary-900 text-center mb-12">
+          <h2 className="display-md text-secondary-900 text-center mb-12">
             How It Works
           </h2>
           
@@ -118,12 +118,12 @@ const About = () => {
               className="card text-center"
             >
               <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary-600 font-bold text-lg">1</span>
+                <span className="text-primary-600 font-bold body-lg">1</span>
               </div>
-              <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+              <h3 className="body-lg font-semibold text-secondary-900 mb-2">
                 Describe Your App
               </h3>
-              <p className="text-secondary-600">
+              <p className="body-md text-secondary-600">
                 Simply describe your application idea in natural language. 
                 Our system understands complex requirements and user needs.
               </p>
@@ -136,12 +136,12 @@ const About = () => {
               className="card text-center"
             >
               <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary-600 font-bold text-lg">2</span>
+                <span className="text-primary-600 font-bold body-lg">2</span>
               </div>
-              <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+              <h3 className="body-lg font-semibold text-secondary-900 mb-2">
                 AI Agents Collaborate
               </h3>
-              <p className="text-secondary-600">
+              <p className="body-md text-secondary-600">
                 Multiple specialized AI agents work together, each contributing 
                 their expertise like a real development team.
               </p>
@@ -154,12 +154,12 @@ const About = () => {
               className="card text-center"
             >
               <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <span className="text-primary-600 font-bold text-lg">3</span>
+                <span className="text-primary-600 font-bold body-lg">3</span>
               </div>
-              <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+              <h3 className="body-lg font-semibold text-secondary-900 mb-2">
                 Get Complete App
               </h3>
-              <p className="text-secondary-600">
+              <p className="body-md text-secondary-600">
                 Receive a complete application with code, documentation, 
                 tests, and setup instructions ready for development.
               </p>
@@ -168,7 +168,7 @@ const About = () => {
         </section>
         {/* Technologies */}
         <section className="mb-16 bg-white rounded-2xl p-8">
-          <h2 className="text-3xl font-bold text-secondary-900 text-center mb-12">
+          <h2 className="display-md text-secondary-900 text-center mb-12">
             Built With Leading Technologies
           </h2>
           
@@ -182,19 +182,19 @@ const About = () => {
                 className="text-center group"
               >
                 <div className="w-16 h-16 bg-primary-100 rounded-lg flex items-center justify-center mx-auto mb-4 group-hover:bg-primary-200 transition-colors">
-                  <tech.icon className="h-8 w-8 text-primary-600" />
+                  {React.createElement(tech.icon, { className: "h-8 w-8 text-primary-600" })}
                 </div>
-                <h3 className="font-semibold text-secondary-900 mb-2">
+                <h3 className="label text-secondary-900 mb-2">
                   {tech.name}
                 </h3>
-                <p className="text-sm text-secondary-600 mb-3">
+                <p className="caption text-secondary-600 mb-3">
                   {tech.description}
                 </p>
                 <a
                   href={tech.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center text-primary-600 hover:text-primary-700 text-sm font-medium"
+                  className="inline-flex items-center text-primary-600 hover:text-primary-700 caption font-medium"
                 >
                   Learn More
                   <ExternalLink className="h-3 w-3 ml-1" />
@@ -206,7 +206,7 @@ const About = () => {
 
         {/* AI Agents */}
         <section className="mb-16">
-          <h2 className="text-3xl font-bold text-secondary-900 text-center mb-12">
+          <h2 className="display-md text-secondary-900 text-center mb-12">
             Meet Our AI Agents
           </h2>
           
@@ -219,19 +219,19 @@ const About = () => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="card hover:shadow-glow transition-shadow"
               >
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+                <h3 className="body-lg font-semibold text-secondary-900 mb-2">
                   {agent.role}
                 </h3>
-                <p className="text-secondary-600 mb-4">
+                <p className="body-md text-secondary-600 mb-4">
                   {agent.description}
                 </p>
                 <div>
-                  <h4 className="text-sm font-medium text-secondary-700 mb-2">
+                  <h4 className="caption text-secondary-700 mb-2">
                     Key Responsibilities:
                   </h4>
                   <ul className="space-y-1">
                     {agent.responsibilities.map((responsibility, idx) => (
-                      <li key={idx} className="flex items-center text-sm text-secondary-600">
+                      <li key={idx} className="flex items-center caption text-secondary-600">
                         <CheckCircle className="h-3 w-3 text-success-600 mr-2 flex-shrink-0" />
                         {responsibility}
                       </li>
@@ -245,7 +245,7 @@ const About = () => {
 
         {/* Features */}
         <section className="mb-16 bg-secondary-50 rounded-2xl p-8">
-          <h2 className="text-3xl font-bold text-secondary-900 text-center mb-12">
+          <h2 className="display-md text-secondary-900 text-center mb-12">
             Platform Features
           </h2>
           
@@ -259,7 +259,7 @@ const About = () => {
                 className="flex items-center space-x-3"
               >
                 <CheckCircle className="h-5 w-5 text-success-600 flex-shrink-0" />
-                <span className="text-secondary-700">{feature}</span>
+                <span className="body-md text-secondary-700">{feature}</span>
               </motion.div>
             ))}
           </div>
@@ -272,16 +272,16 @@ const About = () => {
           transition={{ duration: 0.6, delay: 0.5 }}
           className="text-center bg-gradient-to-r from-primary-600 to-primary-800 rounded-2xl p-12 text-white"
         >
-          <h2 className="text-3xl font-bold mb-4">
+          <h2 className="display-md mb-4">
             Ready to Experience the Future of Development?
           </h2>
-          <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+          <p className="body-xl text-primary-100 mb-8 max-w-2xl mx-auto">
             Join the revolution in application development. Generate your first app 
             in minutes, not months.
           </p>
           <a
             href="/generate"
-            className="btn bg-white text-primary-600 hover:bg-secondary-50 text-lg px-8 py-4 inline-flex items-center"
+            className="btn bg-white text-primary-600 hover:bg-secondary-50 body-lg px-8 py-4 inline-flex items-center"
           >
             Start Building Now
             <ArrowRight className="ml-2 h-5 w-5" />

@@ -10,7 +10,7 @@ from datetime import datetime
 
 from app.core.logging import get_logger
 from app.core.exceptions import OrchestrationException
-from app.core.config_clean import settings
+from app.core.config import settings
 
 logger = get_logger(__name__)
 
@@ -20,7 +20,7 @@ class ArtifactProcessor:
     
     def __init__(self):
         self.artifacts_cache: Dict[str, Dict] = {}
-        self.workspace_base = Path(settings.metagpt.METAGPT_WORKSPACE)
+        self.workspace_base = Path(settings.METAGPT_WORKSPACE)
     
     def process_artifacts(self, session_id: str, raw_artifacts: List[Dict]) -> List[Dict]:
         """Process raw artifacts into standardized format"""
@@ -199,7 +199,7 @@ class ArtifactProcessor:
     def _validate_content(self, artifact: Dict) -> bool:
         """Validate artifact content"""
         # Check size limits
-        if artifact['size'] > settings.files.MAX_FILE_SIZE:
+        if artifact['size'] > settings.MAX_FILE_SIZE:
             logger.warning(f"Artifact {artifact['id']} exceeds size limit")
             return False
         

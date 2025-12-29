@@ -16,18 +16,20 @@ const Header = () => {
   const isActive = (path) => location.pathname === path
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-secondary-200">
+    <header className="sticky top-0 z-50 glass border-b border-white/20 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-18">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group">
+          <Link to="/" className="flex items-center space-x-3 group">
             <div className="relative">
-              <Bot className="h-8 w-8 text-primary-600 group-hover:text-primary-700 transition-colors" />
-              <Zap className="h-4 w-4 text-warning-500 absolute -top-1 -right-1 animate-pulse" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center shadow-glow group-hover:shadow-glow-lg transition-all duration-300">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <Zap className="h-4 w-4 text-accent-500 absolute -top-1 -right-1 animate-pulse" />
             </div>
             <div className="hidden sm:block">
-              <span className="text-xl font-bold text-gradient">MetaGPT</span>
-              <span className="text-sm text-secondary-600 ml-1">+ Bedrock</span>
+              <div className="font-display text-xl font-bold text-gradient">MetaGPT</div>
+              <div className="caption -mt-1">Powered by AWS Bedrock</div>
             </div>
           </Link>
 
@@ -37,17 +39,17 @@ const Header = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`relative px-3 py-2 text-sm font-medium transition-colors ${
+                className={`relative px-3 py-2 body-sm font-semibold transition-colors ${
                   isActive(item.href)
                     ? 'text-primary-600'
-                    : 'text-secondary-600 hover:text-secondary-900'
+                    : 'text-neutral-600 hover:text-neutral-900'
                 }`}
               >
                 {item.name}
                 {isActive(item.href) && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-x-0 -bottom-px h-0.5 bg-primary-600"
+                    className="absolute inset-x-0 -bottom-px h-1 bg-gradient-to-r from-primary-400 to-secondary-500 rounded-full"
                     initial={false}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
@@ -69,7 +71,7 @@ const Header = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100 transition-colors"
+            className="md:hidden p-2 rounded-lg text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -81,7 +83,7 @@ const Header = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden border-t border-secondary-200 py-4"
+            className="md:hidden border-t border-neutral-200 py-4"
           >
             <div className="flex flex-col space-y-2">
               {navigation.map((item) => (
@@ -89,10 +91,10 @@ const Header = () => {
                   key={item.name}
                   to={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-3 py-2 body-sm font-semibold rounded-xl transition-colors ${
                     isActive(item.href)
                       ? 'text-primary-600 bg-primary-50'
-                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-secondary-100'
+                      : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
                   }`}
                 >
                   {item.name}

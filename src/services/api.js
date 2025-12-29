@@ -27,7 +27,36 @@ api.interceptors.response.use(
     return response.data
   },
   (error) => {
-    const message = error.response?.data?.detail || error.message || 'An error occurred'
+    console.error('API Error:', error)
+    
+    // Handle different error scenarios
+    let message = 'An error occurred'
+    
+    if (error.response) {
+      // Server responded with error status
+      const data = error.response.data
+      if (data?.detail) {
+        // FastAPI validation error format
+        if (Array.isArray(data.detail)) {
+          message = data.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join(', ')
+        } else {
+          message = data.detail
+        }
+      } else if (data?.message) {
+        message = data.message
+      } else if (data?.error) {
+        message = data.error
+      } else {
+        message = `Server error: ${error.response.status}`
+      }
+    } else if (error.request) {
+      // Network error
+      message = 'Network error - please check your connection'
+    } else {
+      // Other error
+      message = error.message || 'An unexpected error occurred'
+    }
+    
     return Promise.reject(new Error(message))
   }
 )

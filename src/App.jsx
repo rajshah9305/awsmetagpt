@@ -14,22 +14,16 @@ import About from './pages/About'
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-secondary-50 to-primary-50">
+    <div className="min-h-screen flex flex-col">
       <Header />
       
       <main className="flex-1">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/generate" element={<Generator />} />
-            <Route path="/results/:generationId" element={<Results />} />
-            <Route path="/about" element={<About />} />
-          </Routes>
-        </motion.div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/generate" element={<Generator />} />
+          <Route path="/results/:generationId" element={<Results />} />
+          <Route path="/about" element={<About />} />
+        </Routes>
       </main>
       
       <Footer />

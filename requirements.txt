@@ -1,43 +1,31 @@
 # Core FastAPI and ASGI
-fastapi==0.115.6
-uvicorn[standard]==0.32.1
-python-multipart==0.0.20
-gunicorn==21.2.0
+fastapi
+uvicorn[standard]
+python-multipart
+gunicorn
 
 # Configuration and validation
-pydantic-settings==2.7.1
-pydantic[email]==2.10.6
-python-dotenv==1.0.1
+pydantic-settings
+python-dotenv
 
 # AWS Bedrock and AI services
-boto3==1.35.90
-botocore==1.35.90
+boto3
+botocore
 
-# WebSocket support
-websockets==14.1
-
-# MetaGPT - Real multi-agent framework
+# MetaGPT - Real multi-agent framework (will install its own dependencies)
 metagpt==0.8.1
+typing-extensions==4.9.0  # Required by metagpt
 
 # E2B Sandbox for code execution
-e2b==1.0.4
-
-# File operations and utilities
-aiofiles==24.1.0
-httpx==0.27.2
+e2b
 
 # System utilities
-click==8.1.8
-rich==13.9.4
-psutil==6.1.0
-pyyaml==6.0.1
+psutil
 
-# Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-mock==3.12.0
-
-# Development tools
-black==23.11.0
-isort==5.12.0
-flake8==6.1.0
+# Development dependencies (optional)
+pytest<9,>=8.2
+pytest-asyncio<1.0
+black
+isort
+flake8
+mypy

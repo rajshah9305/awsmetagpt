@@ -41,11 +41,14 @@ class AgentOrchestrator:
         """Start background maintenance tasks"""
         if not self._background_tasks_started:
             try:
+                # Check if we're in an async context
+                loop = asyncio.get_running_loop()
                 if not self._cleanup_task:
-                    self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+                    self._cleanup_task = loop.create_task(self._cleanup_loop())
                 self._background_tasks_started = True
             except RuntimeError:
                 # No event loop running, tasks will be started when needed
+                logger.debug("No event loop running, background tasks will be started later")
                 pass
     
     async def create_session(

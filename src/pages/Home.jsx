@@ -1,210 +1,277 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
-  Bot, Zap, Code, Users, Rocket, ArrowRight, 
-  CheckCircle, Sparkles, Brain, Cloud 
+  Brain, Users, Code, Cloud, Zap, ArrowRight, 
+  CheckCircle, Sparkles, Rocket, Bot, 
+  Cpu, GitBranch, Database, Shield
 } from 'lucide-react'
+
+import AnimatedBackground from '../components/AnimatedBackground'
+import HeroSection from '../components/HeroSection'
+import FeatureCard from '../components/FeatureCard'
+import GlassCard from '../components/GlassCard'
+import { Link } from 'react-router-dom'
 
 const Home = () => {
   const features = [
     {
       icon: Brain,
       title: 'AI-Powered Generation',
-      description: 'Leverage AWS Bedrock\'s foundation models for intelligent app creation'
+      description: 'Leverage cutting-edge AWS Bedrock foundation models for intelligent, context-aware application creation.'
     },
     {
       icon: Users,
       title: 'Multi-Agent Collaboration',
-      description: 'MetaGPT agents work together like a real development team'
+      description: 'Watch MetaGPT agents work together like a real development team - each with specialized expertise.'
     },
     {
       icon: Code,
       title: 'Complete Applications',
-      description: 'Generate full-stack applications with documentation and tests'
+      description: 'Generate production-ready, full-stack applications with comprehensive documentation and tests.'
     },
     {
       icon: Cloud,
-      title: 'Cloud-Native',
-      description: 'Built for modern development and scalability'
+      title: 'Cloud-Native Architecture',
+      description: 'Built for modern development with scalability, security, and best practices baked in.'
+    },
+    {
+      icon: Zap,
+      title: 'Lightning Fast',
+      description: 'From idea to working prototype in minutes. No more weeks of development for MVPs.'
+    },
+    {
+      icon: Shield,
+      title: 'Enterprise Ready',
+      description: 'Security-first design with industry-standard practices and compliance considerations.'
     }
   ]
 
   const benefits = [
     'Natural language to working application',
     'Multiple AI models for different tasks',
-    'Real-time generation progress',
+    'Real-time generation progress tracking',
     'Complete project documentation',
-    'Ready-to-use code structure',
-    'No coding experience required'
+    'Ready-to-deploy code structure',
+    'No coding experience required',
+    'Customizable tech stack options',
+    'Built-in testing & quality assurance'
+  ]
+
+  const techStack = [
+    { icon: Cpu, label: 'AWS Bedrock' },
+    { icon: Bot, label: 'MetaGPT' },
+    { icon: GitBranch, label: 'Git Ready' },
+    { icon: Database, label: 'Full Stack' },
   ]
 
   return (
-    <div className="min-h-screen">
+    <AnimatedBackground variant="default">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 sm:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="mb-8"
-            >
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <Bot className="h-16 w-16 text-primary-600" />
-                  <Sparkles className="h-6 w-6 text-warning-500 absolute -top-1 -right-1 animate-pulse" />
-                </div>
-              </div>
-              
-              <h1 className="text-4xl sm:text-6xl font-bold text-secondary-900 mb-6">
-                From Idea to
-                <span className="text-gradient block">Working App</span>
-                in Minutes
-              </h1>
-              
-              <p className="text-xl text-secondary-600 max-w-3xl mx-auto mb-8">
-                Describe your app in plain English and watch as MetaGPT agents collaborate 
-                with AWS Bedrock AI models to generate complete, production-ready applications.
-              </p>
-            </motion.div>
+      <HeroSection />
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
-              <Link to="/generate" className="btn-primary text-lg px-8 py-4">
-                Start Generating
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-              <Link to="/about" className="btn-outline text-lg px-8 py-4">
-                Learn More
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
       {/* Features Section */}
-      <section className="py-20 bg-white">
+      <section className="py-24 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-secondary-900 mb-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="display-md text-neutral-900 mb-4">
               Powered by Advanced AI
             </h2>
-            <p className="text-lg text-secondary-600 max-w-2xl mx-auto">
-              Combining MetaGPT&apos;s multi-agent framework with AWS Bedrock&apos;s foundation models
+            <p className="body-xl text-neutral-600 max-w-2xl mx-auto">
+              Combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <motion.div
+              <FeatureCard
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="card text-center hover:shadow-glow transition-shadow"
-              >
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-100 rounded-lg mb-4">
-                  <feature.icon className="h-6 w-6 text-primary-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-secondary-600">
-                  {feature.description}
-                </p>
-              </motion.div>
+                icon={feature.icon}
+                title={feature.title}
+                description={feature.description}
+                delay={index * 0.1}
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-secondary-50">
+      {/* Benefits Section with Glass Card */}
+      <section className="py-24 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-3xl font-bold text-secondary-900 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="display-md text-neutral-900 mb-6">
                 Why Choose Our Platform?
               </h2>
-              <div className="space-y-4">
+              <p className="body-lg text-neutral-600 mb-8">
+                Experience the future of software development with AI-powered automation that doesn't compromise on quality.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {benefits.map((benefit, index) => (
                   <motion.div
                     key={benefit}
                     initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="flex items-center space-x-3"
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.05 }}
+                    className="flex items-start space-x-3"
                   >
-                    <CheckCircle className="h-5 w-5 text-success-600 flex-shrink-0" />
-                    <span className="text-secondary-700">{benefit}</span>
+                    <CheckCircle className="h-5 w-5 text-success-600 flex-shrink-0 mt-1" />
+                    <span className="body-md text-neutral-700">{benefit}</span>
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="relative">
-              <div className="card bg-gradient-to-br from-primary-50 to-secondary-50 p-8">
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="relative"
+            >
+              <GlassCard className="overflow-hidden">
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex -space-x-2">
-                    <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="w-8 h-8 bg-success-500 rounded-full flex items-center justify-center">
-                      <Code className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="w-8 h-8 bg-warning-500 rounded-full flex items-center justify-center">
-                      <Zap className="h-4 w-4 text-white" />
+                  <div className="flex -space-x-3">
+                    {[
+                      { icon: Bot, color: 'from-primary-400 to-primary-600' },
+                      { icon: Code, color: 'from-success-400 to-success-600' },
+                      { icon: Zap, color: 'from-accent-400 to-accent-600' },
+                    ].map((agent, idx) => (
+                      <motion.div
+                        key={idx}
+                        className={`w-10 h-10 bg-gradient-to-br ${agent.color} rounded-full flex items-center justify-center border-2 border-white shadow-lg`}
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ duration: 2, delay: idx * 0.2, repeat: Infinity }}
+                      >
+                        {React.createElement(agent.icon, { className: "h-5 w-5 text-white" })}
+                      </motion.div>
+                    ))}
+                  </div>
+                  <div>
+                    <div className="badge-glass">
+                      <span className="status-indicator inline-block w-2 h-2 bg-success-500 rounded-full mr-2"></span>
+                      Agents Collaborating
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-secondary-600">
-                    Agents Collaborating
-                  </span>
                 </div>
-                <h3 className="text-lg font-semibold text-secondary-900 mb-2">
+                <h3 className="body-xl font-display font-semibold text-neutral-900 mb-3">
                   Real-time Generation
                 </h3>
-                <p className="text-secondary-600 mb-4">
+                <p className="body-md text-neutral-600 mb-6">
                   Watch as different AI agents work together to build your application, 
-                  each contributing their specialized expertise.
+                  each contributing their specialized expertise in real-time.
                 </p>
-                <div className="progress-bar">
-                  <div className="progress-fill w-3/4"></div>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between body-sm mb-2">
+                      <span className="text-neutral-700 font-medium">Architecture Design</span>
+                      <span className="text-primary-600 font-semibold">100%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <div className="progress-fill w-full"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between body-sm mb-2">
+                      <span className="text-neutral-700 font-medium">Code Generation</span>
+                      <span className="text-primary-600 font-semibold">75%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <motion.div 
+                        className="progress-fill" 
+                        initial={{ width: 0 }}
+                        animate={{ width: '75%' }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                      ></motion.div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between body-sm mb-2">
+                      <span className="text-neutral-700 font-medium">Testing & QA</span>
+                      <span className="text-neutral-500 font-semibold">45%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <motion.div 
+                        className="progress-fill" 
+                        initial={{ width: 0 }}
+                        animate={{ width: '45%' }}
+                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                      ></motion.div>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm text-secondary-500 mt-2">Generation in progress...</p>
+              </GlassCard>
+
+              {/* Floating tech stack badges */}
+              <div className="absolute -bottom-6 -right-6 grid grid-cols-2 gap-3">
+                {techStack.map((tech, idx) => (
+                  <motion.div
+                    key={tech.label}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="badge-glass backdrop-blur-lg px-3 py-2 shadow-elevation-2"
+                  >
+                    {React.createElement(tech.icon, { className: "w-4 h-4 inline-block mr-2 text-primary-600" })}
+                    <span className="overline">{tech.label}</span>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-24 relative">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <Rocket className="h-12 w-12 text-white mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to Build Your Next App?
-            </h2>
-            <p className="text-xl text-primary-100 mb-8">
-              Join thousands of developers who are already using AI to accelerate their development process.
-            </p>
-            <Link to="/generate" className="btn bg-white text-primary-600 hover:bg-secondary-50 text-lg px-8 py-4">
-              Get Started Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
+            <GlassCard className="text-center bg-gradient-to-br from-primary-500/10 to-secondary-500/10 border-primary-400/20 p-12">
+              <motion.div
+                animate={{ rotate: [0, 10, 0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="inline-block mb-6"
+              >
+                <Rocket className="h-16 w-16 text-primary-600" />
+              </motion.div>
+              <h2 className="display-md text-neutral-900 mb-4">
+                Ready to Build Your Next App?
+              </h2>
+              <p className="body-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
+                Join thousands of developers who are already using AI to accelerate their development process and bring ideas to life faster than ever.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/generate" className="btn-primary body-lg px-10 py-4 shadow-glow-lg">
+                  <span className="relative z-10">Get Started Now</span>
+                  <ArrowRight className="ml-2 h-6 w-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link to="/about" className="btn-outline body-lg px-10 py-4">
+                  Learn More
+                </Link>
+              </div>
+            </GlassCard>
           </motion.div>
         </div>
       </section>
-    </div>
+    </AnimatedBackground>
   )
 }
 
