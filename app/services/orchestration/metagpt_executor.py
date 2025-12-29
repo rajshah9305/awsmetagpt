@@ -27,20 +27,42 @@ class MetaGPTExecutor:
         self._setup_metagpt()
     
     def _setup_metagpt(self) -> None:
-        """Initialize MetaGPT with Bedrock configuration"""
+        """Initialize MetaGPT with proper configuration"""
         try:
             # Create MetaGPT config directory
             config_dir = Path.home() / ".metagpt"
             config_dir.mkdir(exist_ok=True)
             
-            # Create Bedrock configuration for MetaGPT
-            bedrock_config = {
+            # Determine which API to use for MetaGPT
+            # MetaGPT 0.8.1 doesn't support 'bedrock' directly
+            # We'll use OpenAI or Anthropic API for MetaGPT agents
+            api_type = None
+            api_key = None
+            model = None
+            
+            if settings.OPENAI_API_KEY:
+                api_type = "openai"
+                api_key = settings.OPENAI_API_KEY
+                model = "gpt-4"  # Default OpenAI model
+                logger.info("Using OpenAI API for MetaGPT agents")
+            elif settings.ANTHROPIC_API_KEY:
+                api_type = "anthropic"
+                api_key = settings.ANTHROPIC_API_KEY
+                model = "claude-3-sonnet-20240229"  # Default Anthropic model
+                logger.info("Using Anthropic API for MetaGPT agents")
+            else:
+                logger.warning("No AI API key configured for MetaGPT (OpenAI or Anthropic)")
+                # Create minimal config for development
+                api_type = "openai"
+                api_key = "dummy-key-for-development"
+                model = "gpt-4"
+            
+            # Create MetaGPT configuration
+            metagpt_config = {
                 "llm": {
-                    "api_type": "bedrock",
-                    "model": settings.BEDROCK_MODEL,
-                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
-                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
-                    "aws_region": settings.AWS_REGION,
+                    "api_type": api_type,
+                    "model": model,
+                    "api_key": api_key,
                     "max_tokens": 4000,
                     "temperature": 0.7
                 }
@@ -48,12 +70,13 @@ class MetaGPTExecutor:
             
             config_file = config_dir / "config2.yaml"
             with open(config_file, 'w') as f:
-                yaml.dump(bedrock_config, f, default_flow_style=False)
+                yaml.dump(metagpt_config, f, default_flow_style=False)
             
-            # Set environment variables
-            env_vars = settings.get_env_vars()
-            for key, value in env_vars.items():
-                os.environ[key] = value
+            # Set environment variables for MetaGPT
+            if api_type == "openai" and api_key != "dummy-key-for-development":
+                os.environ['OPENAI_API_KEY'] = api_key
+            elif api_type == "anthropic":
+                os.environ['ANTHROPIC_API_KEY'] = api_key
             
             # Create workspace directory
             workspace_path = Path(settings.METAGPT_WORKSPACE)
@@ -62,7 +85,7 @@ class MetaGPTExecutor:
             workspace_path.mkdir(parents=True, exist_ok=True)
             
             self.metagpt_configured = True
-            logger.info(f"MetaGPT configured with model: {settings.BEDROCK_MODEL}")
+            logger.info(f"✅ MetaGPT configured with {api_type} API and model: {model}")
             
         except Exception as e:
             logger.error(f"Failed to setup MetaGPT: {e}")
@@ -70,43 +93,10 @@ class MetaGPTExecutor:
     
     def update_model(self, model: BedrockModel) -> None:
         """Update MetaGPT configuration with new model"""
-        try:
-            config_dir = Path.home() / ".metagpt"
-            config_file = config_dir / "config2.yaml"
-            
-            # Model mapping for MetaGPT
-            model_mapping = {
-                BedrockModel.NOVA_PRO: "us.amazon.nova-pro-v1:0",
-                BedrockModel.NOVA_LITE: "us.amazon.nova-lite-v1:0",
-                BedrockModel.NOVA_MICRO: "us.amazon.nova-micro-v1:0",
-                BedrockModel.CLAUDE_SONNET_4: "us.anthropic.claude-sonnet-4-20250514-v1:0",
-                BedrockModel.LLAMA_33_70B: "us.meta.llama3-3-70b-instruct-v1:0",
-                BedrockModel.LLAMA_32_90B: "us.meta.llama3-2-90b-instruct-v1:0"
-            }
-            
-            metagpt_model = model_mapping.get(model, model.value)
-            
-            # Update config
-            bedrock_config = {
-                "llm": {
-                    "api_type": "bedrock",
-                    "model": metagpt_model,
-                    "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
-                    "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
-                    "aws_region": settings.AWS_REGION,
-                    "max_tokens": 4000,
-                    "temperature": 0.7
-                }
-            }
-            
-            with open(config_file, 'w') as f:
-                yaml.dump(bedrock_config, f, default_flow_style=False)
-            
-            logger.info(f"Updated MetaGPT model to: {metagpt_model}")
-            
-        except Exception as e:
-            logger.error(f"Failed to update MetaGPT model: {e}")
-            raise MetaGPTException(f"Model update failed: {e}")
+        # Note: This method is kept for compatibility but MetaGPT uses OpenAI/Anthropic
+        # AWS Bedrock models are used separately through bedrock_client
+        logger.info(f"Bedrock model {model.value} will be used via bedrock_client, not MetaGPT")
+        # MetaGPT continues to use the configured OpenAI or Anthropic API
     
     async def execute_generation(
         self, 

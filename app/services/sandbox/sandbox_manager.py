@@ -90,27 +90,55 @@ class SandboxManager:
             raise SandboxCreationException(f"Sandbox creation failed: {e}")
     
     async def _create_e2b_sandbox(self, sandbox_info: SandboxInfo, config: SandboxConfig):
-        """Create actual E2B sandbox (simulated for now)"""
-        # In real implementation, this would create an E2B sandbox
-        # For now, we'll simulate the creation process
-        
-        logger.debug(f"Creating E2B sandbox {sandbox_info.id} with config: {config.to_dict()}")
-        
-        # Simulate creation delay
-        await asyncio.sleep(1)
-        
-        # Set sandbox instance (would be actual E2B sandbox object)
-        sandbox_info.sandbox_instance = {
-            'id': sandbox_info.id,
-            'template': config.template_id,
-            'status': 'running',
-            'url': f"https://{sandbox_info.id}.e2b.dev"
-        }
-        
-        # Set preview URL
-        sandbox_info.preview_url = f"https://{sandbox_info.id}.e2b.dev"
-        
-        logger.debug(f"E2B sandbox {sandbox_info.id} created successfully")
+        """Create actual E2B sandbox using real E2B API"""
+        try:
+            # Check if E2B is enabled and configured
+            if not settings.ENABLE_E2B or not settings.E2B_API_KEY:
+                logger.warning(f"E2B not configured, using simulated sandbox for {sandbox_info.id}")
+                # Fallback to simulation
+                await asyncio.sleep(0.5)
+                sandbox_info.sandbox_instance = {
+                    'id': sandbox_info.id,
+                    'template': config.template_id,
+                    'status': 'simulated',
+                    'url': f"https://simulated-{sandbox_info.id}.local"
+                }
+                sandbox_info.preview_url = f"https://simulated-{sandbox_info.id}.local"
+                return
+            
+            logger.debug(f"Creating real E2B sandbox {sandbox_info.id} with config: {config.to_dict()}")
+            
+            # Import E2B SDK
+            from e2b import Sandbox
+            
+            # Create actual E2B sandbox with configuration
+            sandbox = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: Sandbox(
+                    template=config.template_id,
+                    api_key=settings.E2B_API_KEY,
+                    timeout=config.timeout,
+                    metadata={
+                        'session_id': sandbox_info.session_id,
+                        'sandbox_id': sandbox_info.id
+                    }
+                )
+            )
+            
+            # Store the actual E2B sandbox instance
+            sandbox_info.sandbox_instance = sandbox
+            
+            # Get the sandbox URL (E2B provides this)
+            sandbox_info.preview_url = f"https://{sandbox.get_host(3000)}" if hasattr(sandbox, 'get_host') else None
+            
+            logger.info(f"✅ Real E2B sandbox {sandbox_info.id} created successfully")
+            
+        except ImportError as e:
+            logger.error(f"E2B SDK not available: {e}")
+            raise SandboxCreationException(f"E2B SDK not installed: {e}")
+        except Exception as e:
+            logger.error(f"Failed to create E2B sandbox {sandbox_info.id}: {e}")
+            raise SandboxCreationException(f"E2B sandbox creation failed: {e}")
     
     async def write_files(self, sandbox_id: str, artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Write files to sandbox"""
@@ -300,12 +328,27 @@ class SandboxManager:
             for process in running_processes:
                 await process_manager.stop_process(process.id)
         
+        # Close E2B sandbox if it's a real instance
+        if sandbox_id in self.sandboxes:
+            sandbox_info = self.sandboxes[sandbox_id]
+            if sandbox_info.sandbox_instance:
+                try:
+                    # Check if it's a real E2B Sandbox object
+                    if hasattr(sandbox_info.sandbox_instance, 'close'):
+                        logger.debug(f"Closing real E2B sandbox {sandbox_id}")
+                        await asyncio.get_event_loop().run_in_executor(
+                            None,
+                            sandbox_info.sandbox_instance.close
+                        )
+                        logger.info(f"✅ E2B sandbox {sandbox_id} closed successfully")
+                except Exception as e:
+                    logger.warning(f"Failed to close E2B sandbox {sandbox_id}: {e}")
+        
         # Remove from all collections
         self.sandboxes.pop(sandbox_id, None)
         self.process_managers.pop(sandbox_id, None)
         self.file_managers.pop(sandbox_id, None)
         
-        # In real implementation, would also cleanup E2B sandbox
         logger.debug(f"Sandbox {sandbox_id} cleaned up")
     
     async def _cleanup_loop(self):
