@@ -324,31 +324,45 @@ async def health_check(services: dict = Depends(get_services)):
 async def get_available_bedrock_models(services: dict = Depends(get_services)):
     """Get available Bedrock models"""
     try:
-        bedrock_client = services['bedrock_client']
-        
-        if not bedrock_client.client:
-            raise HTTPException(status_code=503, detail="Bedrock service unavailable")
-        
-        # This would typically call bedrock_client.list_models()
-        # For now, return the configured models
         from app.models.schemas import BedrockModel
         
-        models = [
-            {
+        provider_names = {
+            "us.amazon": "Amazon",
+            "us.meta": "Meta",
+            "us.anthropic": "Anthropic",
+            "amazon": "Amazon",
+            "meta": "Meta",
+            "anthropic": "Anthropic",
+        }
+        
+        model_display_names = {
+            "NOVA_PRO": "Nova Pro",
+            "NOVA_LITE": "Nova Lite",
+            "NOVA_MICRO": "Nova Micro",
+            "LLAMA_33_70B": "Llama 3.3 70B",
+            "LLAMA_32_90B": "Llama 3.2 90B",
+            "LLAMA_32_11B": "Llama 3.2 11B",
+            "CLAUDE_SONNET_4": "Claude Sonnet 4",
+            "CLAUDE_HAIKU_45": "Claude Haiku 4.5",
+            "CLAUDE_OPUS_4": "Claude Opus 4",
+        }
+        
+        models = []
+        for model in BedrockModel:
+            prefix = ".".join(model.value.split(".")[:2])
+            provider = provider_names.get(prefix, model.value.split(".")[0].title())
+            display_name = model_display_names.get(model.name, model.name.replace("_", " ").title())
+            models.append({
                 "id": model.value,
-                "name": model.name,
-                "provider": model.value.split('.')[0] if '.' in model.value else "unknown"
-            }
-            for model in BedrockModel
-        ]
+                "name": display_name,
+                "provider": provider
+            })
         
         return {
             "models": models,
             "current_model": settings.BEDROCK_MODEL
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error getting Bedrock models: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -360,11 +374,29 @@ async def get_agent_roles():
     try:
         from app.models.schemas import AgentRole
         
+        role_descriptions = {
+            AgentRole.PRODUCT_MANAGER: "Analyzes requirements, creates user stories, and defines product specifications",
+            AgentRole.ARCHITECT: "Designs system architecture, selects tech stack, and creates technical specifications",
+            AgentRole.PROJECT_MANAGER: "Creates project plans, manages timelines, and coordinates development activities",
+            AgentRole.ENGINEER: "Implements application code following architecture and best practices",
+            AgentRole.QA_ENGINEER: "Creates test strategies, writes test cases, and ensures quality standards",
+            AgentRole.DEVOPS: "Designs infrastructure, CI/CD pipelines, and deployment configurations",
+        }
+        
+        role_display_names = {
+            AgentRole.PRODUCT_MANAGER: "Product Manager",
+            AgentRole.ARCHITECT: "System Architect",
+            AgentRole.PROJECT_MANAGER: "Project Manager",
+            AgentRole.ENGINEER: "Software Engineer",
+            AgentRole.QA_ENGINEER: "QA Engineer",
+            AgentRole.DEVOPS: "DevOps Engineer",
+        }
+        
         roles = [
             {
                 "id": role.value,
-                "name": role.name.replace('_', ' ').title(),
-                "description": role.value.replace('_', ' ').title()
+                "name": role_display_names.get(role, role.name.replace('_', ' ').title()),
+                "description": role_descriptions.get(role, role.value.replace('_', ' ').title())
             }
             for role in AgentRole
         ]

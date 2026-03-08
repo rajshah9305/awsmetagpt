@@ -264,6 +264,10 @@
     box-shadow: 0 0 30px rgba(70, 102, 255, 0.3);
   }
 
+  .shadow-glow-lg {
+    box-shadow: 0 0 50px rgba(70, 102, 255, 0.45);
+  }
+
   .shadow-glow-hover:hover {
     box-shadow: 0 0 40px rgba(70, 102, 255, 0.5);
   }

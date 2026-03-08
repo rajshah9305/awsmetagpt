@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
 import { Globe, Code, Terminal, Info } from 'lucide-react'
 
 import SandboxController from './sandbox/SandboxController'
@@ -14,10 +15,6 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
     { id: 'info', label: 'Info', icon: Info }
   ]
 
-  const handleStatusChange = (status) => {
-    setSandboxStatus(status)
-  }
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'control':
@@ -25,10 +22,9 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
           <SandboxController
             generationId={generationId}
             artifacts={artifacts}
-            onStatusChange={handleStatusChange}
+            onStatusChange={setSandboxStatus}
           />
         )
-      
       case 'logs':
         return (
           <LogViewer
@@ -36,104 +32,110 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
             isActive={activeTab === 'logs'}
           />
         )
-      
       case 'info':
         return (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Sandbox Information</h3>
-            
-            <div className="space-y-4">
+          <div className="glass-card p-6">
+            <h3 className="body-lg font-semibold text-neutral-900 mb-6">Sandbox Information</h3>
+            <div className="space-y-5">
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">Generation ID</h4>
-                <code className="bg-gray-100 px-2 py-1 rounded text-sm">{generationId}</code>
+                <p className="caption text-neutral-500 mb-1">Generation ID</p>
+                <code className="bg-neutral-100 px-3 py-1.5 rounded-lg body-sm font-mono text-neutral-800">{generationId}</code>
               </div>
-              
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">Artifacts</h4>
-                <p className="text-gray-600">{artifacts.length} files ready for deployment</p>
+                <p className="caption text-neutral-500 mb-1">Artifacts</p>
+                <p className="body-md text-neutral-700">{artifacts.length} files ready for deployment</p>
               </div>
-              
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">Status</h4>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  sandboxStatus === 'running' 
-                    ? 'bg-green-100 text-green-800'
+                <p className="caption text-neutral-500 mb-1">Status</p>
+                <span className={`badge ${
+                  sandboxStatus === 'running'
+                    ? 'badge-success'
                     : sandboxStatus === 'ready' || sandboxStatus === 'files_ready'
-                    ? 'bg-blue-100 text-blue-800'
+                    ? 'badge-primary'
                     : sandboxStatus === 'error'
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-gray-100 text-gray-800'
+                    ? 'badge-error'
+                    : 'bg-neutral-100 text-neutral-700 border border-neutral-200'
                 }`}>
                   {sandboxStatus}
                 </span>
               </div>
-              
               <div>
-                <h4 className="font-medium text-gray-700 mb-2">Features</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Isolated execution environment</li>
-                  <li>• Real-time log streaming</li>
-                  <li>• Automatic dependency installation</li>
-                  <li>• Live preview URL</li>
-                  <li>• Process management</li>
+                <p className="caption text-neutral-500 mb-2">Features</p>
+                <ul className="space-y-2">
+                  {[
+                    'Isolated execution environment',
+                    'Real-time log streaming',
+                    'Automatic dependency installation',
+                    'Live preview URL',
+                    'Process management',
+                  ].map(f => (
+                    <li key={f} className="flex items-center body-sm text-neutral-600">
+                      <div className="w-1.5 h-1.5 bg-primary-400 rounded-full mr-2 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
           </div>
         )
-      
       default:
         return null
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`group inline-flex items-center py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className={`mr-2 h-5 w-5 ${
-                  activeTab === tab.id ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
-                }`} />
-                {tab.label}
-              </button>
-            )
-          })}
-        </nav>
+      <div className="glass-card p-1 flex space-x-1">
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <motion.button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex-1 inline-flex items-center justify-center py-2.5 px-4 rounded-xl body-sm font-semibold transition-all duration-200 ${
+                isActive
+                  ? 'bg-gradient-to-r from-primary-400 to-secondary-500 text-white shadow-glow'
+                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+              }`}
+            >
+              <Icon className={`mr-2 h-4 w-4 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
+              {tab.label}
+            </motion.button>
+          )
+        })}
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-[400px]">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="min-h-[400px]"
+      >
         {renderTabContent()}
-      </div>
+      </motion.div>
 
-      {/* Quick Actions */}
+      {/* Running indicator */}
       {sandboxStatus === 'running' && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card-primary p-4"
+        >
           <div className="flex items-center">
-            <Globe className="w-5 h-5 text-green-500 mr-2" />
+            <div className="w-3 h-3 bg-success-500 rounded-full mr-3 animate-pulse" />
             <div>
-              <h4 className="text-sm font-medium text-green-800">
-                Application is running!
-              </h4>
-              <p className="text-sm text-green-700">
-                Your application is live and accessible via the preview URL.
-              </p>
+              <p className="label text-success-700">Application is running</p>
+              <p className="caption text-success-600">Your application is live and accessible via the preview URL.</p>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   )

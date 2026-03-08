@@ -14,7 +14,7 @@ const GlassCard = ({
     primary: 'glass-card-primary',
   }
 
-  const baseClasses = `${variants[variant]} p-6 ${hover ? 'hover-lift cursor-pointer' : ''} ${className}`
+  const baseClasses = `${variants[variant]} p-6 ${hover ? 'hover-lift' : ''} ${onClick ? 'cursor-pointer' : ''} ${className}`
 
   if (onClick) {
     return (

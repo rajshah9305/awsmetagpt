@@ -1,36 +1,36 @@
 import { motion } from 'framer-motion'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, Bot, Code, Zap, Brain } from 'lucide-react'
 import { Link } from 'react-router-dom'
+
+const FloatingAgent = ({ icon: Icon, colorClass, delay, style }) => (
+  <motion.div
+    className={`absolute w-12 h-12 rounded-2xl ${colorClass} flex items-center justify-center shadow-elevation-3`}
+    style={style}
+    animate={{
+      y: [0, -16, 0],
+      rotate: [0, 5, 0, -5, 0],
+    }}
+    transition={{
+      duration: 4 + delay,
+      repeat: Infinity,
+      ease: 'easeInOut',
+      delay,
+    }}
+  >
+    <Icon className="w-6 h-6 text-white" />
+  </motion.div>
+)
 
 const HeroSection = () => {
   return (
     <section className="relative py-20 sm:py-32 overflow-hidden">
-      {/* Floating illustrations */}
-      <motion.div
-        className="absolute top-20 left-10 opacity-10"
-        animate={{ y: [0, -20, 0] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <img 
-          src="/illustrations/neural-network-1.svg" 
-          alt="" 
-          className="w-64 h-64"
-          style={{ width: '16rem', height: '16rem' }}
-        />
-      </motion.div>
-      
-      <motion.div
-        className="absolute bottom-20 right-10 opacity-10"
-        animate={{ y: [0, 20, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <img 
-          src="/illustrations/ai-brain.svg" 
-          alt="" 
-          className="w-72 h-72"
-          style={{ width: '18rem', height: '18rem' }}
-        />
-      </motion.div>
+      {/* Floating agent icons */}
+      <div className="absolute inset-0 pointer-events-none">
+        <FloatingAgent icon={Bot} colorClass="bg-gradient-to-br from-primary-400 to-primary-600" delay={0} style={{ left: '8%', top: '20%' }} />
+        <FloatingAgent icon={Brain} colorClass="bg-gradient-to-br from-secondary-400 to-secondary-600" delay={1} style={{ right: '8%', top: '15%' }} />
+        <FloatingAgent icon={Code} colorClass="bg-gradient-to-br from-success-400 to-success-600" delay={0.5} style={{ left: '5%', bottom: '25%' }} />
+        <FloatingAgent icon={Zap} colorClass="bg-gradient-to-br from-accent-400 to-accent-600" delay={1.5} style={{ right: '6%', bottom: '30%' }} />
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center">

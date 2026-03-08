@@ -218,6 +218,9 @@ export default {
         'glow': '0 0 20px rgba(70, 102, 255, 0.3)',
         'glow-lg': '0 0 40px rgba(70, 102, 255, 0.4)',
         'glow-accent': '0 0 20px rgba(255, 195, 0, 0.3)',
+        // Aliases for convenience
+        'shadow-glow': '0 0 20px rgba(70, 102, 255, 0.3)',
+        'shadow-glow-lg': '0 0 40px rgba(70, 102, 255, 0.4)',
         'elevation-1': '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
         'elevation-2': '0 3px 6px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12)',
         'elevation-3': '0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.10)',

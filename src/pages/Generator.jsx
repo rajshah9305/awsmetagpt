@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { 
   Bot, Zap, Settings, Play, Loader, 
-  Users, Code, Database, TestTube, Cloud, Briefcase 
+  Users, Code, Database, TestTube, Cloud, Briefcase,
+  ChevronDown
 } from 'lucide-react'
 
 import { generateApp, getModels, getAgentRoles } from '../services/api'
+import AnimatedBackground from '../components/AnimatedBackground'
 
 const Generator = () => {
   const navigate = useNavigate()
@@ -109,7 +111,8 @@ const Generator = () => {
   }
 
   return (
-    <div className="min-h-screen py-16 mesh-gradient">
+    <AnimatedBackground variant="dots">
+    <div className="min-h-screen py-16">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -274,7 +277,7 @@ Example: Create a task management app with user authentication, real-time update
                 <h2 className="display-sm text-neutral-900">
                   Advanced Settings
                 </h2>
-                <Settings className={`h-6 w-6 text-neutral-500 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
+                <ChevronDown className={`h-5 w-5 text-neutral-500 transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
               </button>
               
               {showAdvanced && (
@@ -370,6 +373,7 @@ Example: Create a task management app with user authentication, real-time update
         </motion.div>
       </div>
     </div>
+    </AnimatedBackground>
   )
 }
 

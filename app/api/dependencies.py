@@ -81,8 +81,8 @@ def get_bedrock_client() -> BedrockClient:
 
 def check_system_health() -> None:
     """Check system health before processing requests"""
-    # Check if required services are available
-    if settings.ENABLE_BEDROCK:
+    # Only block in production when Bedrock is required
+    if settings.ENABLE_BEDROCK and settings.is_production():
         bedrock = get_bedrock_client()
         if not bedrock.client:
             raise HTTPException(

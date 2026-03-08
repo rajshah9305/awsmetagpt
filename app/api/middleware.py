@@ -114,8 +114,12 @@ class RequestValidator:
         """Validate user agent (basic bot detection)"""
         user_agent = request.headers.get('user-agent', '').lower()
         
-        # Block obvious bots/crawlers
-        blocked_agents = ['bot', 'crawler', 'spider', 'scraper']
+        # Allow empty user agents (API clients, curl, etc.)
+        if not user_agent:
+            return
+        
+        # Block obvious malicious crawlers only
+        blocked_agents = ['scrapy', 'masscan', 'zgrab']
         if any(agent in user_agent for agent in blocked_agents):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
