@@ -24,7 +24,13 @@ class MetaGPTExecutor:
     
     def __init__(self):
         self.metagpt_configured = False
-        self._setup_metagpt()
+        self._setup_error: Optional[str] = None
+        try:
+            self._setup_metagpt()
+        except MetaGPTException as e:
+            # Defer the error to request time so the server can still start
+            self._setup_error = str(e)
+            logger.warning(f"MetaGPT not configured at startup: {e}")
     
     def _setup_metagpt(self) -> None:
         """Initialize MetaGPT with proper configuration"""
@@ -104,7 +110,7 @@ class MetaGPTExecutor:
     ) -> Dict[str, Any]:
         """Execute MetaGPT generation process"""
         if not self.metagpt_configured:
-            raise MetaGPTException("MetaGPT not configured")
+            raise MetaGPTException(self._setup_error or "MetaGPT not configured")
         
         try:
             # Update model if different from current

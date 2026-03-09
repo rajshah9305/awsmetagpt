@@ -17,7 +17,8 @@ from app.api.routes import router as api_router
 from app.core.config import settings
 from app.core.logging import SystemLogger
 from app.core.exceptions import MetaGPTSystemException
-from app.services.websocket_manager import websocket_manager
+from app.services import get_websocket_manager
+websocket_manager = get_websocket_manager()
 from app.api.middleware import error_handler
 
 # Load environment variables
