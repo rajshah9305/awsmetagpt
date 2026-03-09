@@ -143,5 +143,3 @@ class BedrockClient:
             logger.error(f"Unexpected error invoking Bedrock model: {e}")
             return None
 
-# Global instance
-bedrock_client = BedrockClient()

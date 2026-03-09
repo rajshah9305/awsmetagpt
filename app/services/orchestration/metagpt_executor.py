@@ -43,19 +43,17 @@ class MetaGPTExecutor:
             if settings.OPENAI_API_KEY:
                 api_type = "openai"
                 api_key = settings.OPENAI_API_KEY
-                model = "gpt-4"  # Default OpenAI model
+                model = "gpt-4"
                 logger.info("Using OpenAI API for MetaGPT agents")
             elif settings.ANTHROPIC_API_KEY:
                 api_type = "anthropic"
                 api_key = settings.ANTHROPIC_API_KEY
-                model = "claude-3-sonnet-20240229"  # Default Anthropic model
+                model = "claude-3-sonnet-20240229"
                 logger.info("Using Anthropic API for MetaGPT agents")
             else:
-                logger.warning("No AI API key configured for MetaGPT (OpenAI or Anthropic)")
-                # Create minimal config for development
-                api_type = "openai"
-                api_key = "dummy-key-for-development"
-                model = "gpt-4"
+                raise MetaGPTException(
+                    "No AI API key configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY in your .env file."
+                )
             
             # Create MetaGPT configuration
             metagpt_config = {

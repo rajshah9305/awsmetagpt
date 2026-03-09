@@ -360,5 +360,3 @@ class AgentOrchestrator:
         }
 
 
-# Global instance
-agent_orchestrator = AgentOrchestrator()

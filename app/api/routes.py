@@ -27,7 +27,7 @@ async def generate_app(
     background_tasks: BackgroundTasks,
     request_data: dict = Depends(get_validated_request),
     services: dict = Depends(get_services),
-    _: None = Depends(check_system_health)
+    _health: None = Depends(check_system_health),
 ):
     """Generate an application using MetaGPT agents"""
     try:
@@ -93,11 +93,30 @@ async def get_generation_artifacts(
     try:
         orchestrator = services['orchestrator']
         artifacts = orchestrator.get_session_artifacts(generation_id)
-        
         return [GeneratedArtifact(**artifact) for artifact in artifacts]
-        
     except Exception as e:
         logger.error(f"Error getting artifacts: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/generate/{generation_id}/artifact/{artifact_name:path}")
+async def get_specific_artifact(
+    generation_id: str,
+    artifact_name: str,
+    services: dict = Depends(get_services)
+):
+    """Get a specific artifact by name"""
+    try:
+        orchestrator = services['orchestrator']
+        artifacts = orchestrator.get_session_artifacts(generation_id)
+        artifact = next((a for a in artifacts if a.get('name') == artifact_name), None)
+        if not artifact:
+            raise HTTPException(status_code=404, detail="Artifact not found")
+        return artifact
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting artifact: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

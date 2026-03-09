@@ -232,5 +232,3 @@ class WebSocketManager:
                 logger.error(f"Error in WebSocket cleanup: {e}")
                 await asyncio.sleep(60)
 
-# Global instance
-websocket_manager = WebSocketManager()
