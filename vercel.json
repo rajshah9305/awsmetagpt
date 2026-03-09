@@ -1,12 +1,22 @@
 {
-  "buildCommand": "pip install -r requirements.txt && npm install && npm run build",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "installCommand": "pip install -r requirements.txt && npm install",
-  "framework": null,
-  "functions": {
-    "api/**/*.py": {
-      "runtime": "python3.11"
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
-  }
+  ],
+  "routes": [
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
