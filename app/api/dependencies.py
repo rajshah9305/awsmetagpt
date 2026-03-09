@@ -79,29 +79,6 @@ def get_bedrock_client() -> BedrockClient:
     return get_bedrock_client()
 
 
-def check_system_health() -> None:
-    """Check system health before processing requests"""
-    # Only block in production when Bedrock is required
-    if settings.ENABLE_BEDROCK and settings.is_production():
-        bedrock = get_bedrock_client()
-        if not bedrock.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="AI service unavailable"
-            )
-    
-    # Check system capacity
-    orchestrator = get_orchestrator()
-    stats = orchestrator.get_statistics()
-    
-    active_sessions = stats.get('status_distribution', {}).get('running', 0)
-    if active_sessions >= settings.MAX_CONCURRENT_SESSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="System at capacity. Please try again later."
-        )
-
-
 # Dependency combinations
 def get_validated_request(
     request: Request,
@@ -124,3 +101,23 @@ def get_services() -> dict:
         'e2b_service': get_e2b_service(),
         'bedrock_client': get_bedrock_client()
     }
+
+
+def check_system_health(services: dict = Depends(get_services)) -> None:
+    """Check system health before processing requests"""
+    if settings.ENABLE_BEDROCK and settings.is_production():
+        bedrock = services['bedrock_client']
+        if not bedrock.client:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="AI service unavailable"
+            )
+
+    orchestrator = services['orchestrator']
+    stats = orchestrator.get_statistics()
+    active_sessions = stats.get('status_distribution', {}).get('running', 0)
+    if active_sessions >= settings.MAX_CONCURRENT_SESSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="System at capacity. Please try again later."
+        )

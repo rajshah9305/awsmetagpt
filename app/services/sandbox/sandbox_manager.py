@@ -90,23 +90,14 @@ class SandboxManager:
             raise SandboxCreationException(f"Sandbox creation failed: {e}")
     
     async def _create_e2b_sandbox(self, sandbox_info: SandboxInfo, config: SandboxConfig):
-        """Create actual E2B sandbox using real E2B API"""
+        """Create E2B sandbox using the E2B API"""
         try:
-            # Check if E2B is enabled and configured
             if not settings.ENABLE_E2B or not settings.E2B_API_KEY:
-                logger.warning(f"E2B not configured, using simulated sandbox for {sandbox_info.id}")
-                # Fallback to simulation
-                await asyncio.sleep(0.5)
-                sandbox_info.sandbox_instance = {
-                    'id': sandbox_info.id,
-                    'template': config.template_id,
-                    'status': 'simulated',
-                    'url': f"https://simulated-{sandbox_info.id}.local"
-                }
-                sandbox_info.preview_url = f"https://simulated-{sandbox_info.id}.local"
-                return
-            
-            logger.debug(f"Creating real E2B sandbox {sandbox_info.id} with config: {config.to_dict()}")
+                raise SandboxCreationException(
+                    "E2B is not configured. Set E2B_API_KEY and ENABLE_E2B=true in your .env file."
+                )
+
+            logger.debug(f"Creating E2B sandbox {sandbox_info.id} with config: {config.to_dict()}")
             
             # Import E2B SDK
             from e2b import Sandbox
@@ -400,5 +391,3 @@ class SandboxManager:
         }
 
 
-# Global instance
-sandbox_manager = SandboxManager()

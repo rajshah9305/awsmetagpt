@@ -76,5 +76,3 @@ class E2BService:
         return self.sandbox_manager.get_statistics()
 
 
-# Global instance
-e2b_service = E2BService()
