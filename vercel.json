@@ -1,0 +1,12 @@
+{
+  "buildCommand": "pip install -r requirements.txt && npm install && npm run build",
+  "outputDirectory": "dist",
+  "devCommand": "npm run dev",
+  "installCommand": "pip install -r requirements.txt && npm install",
+  "framework": null,
+  "functions": {
+    "api/**/*.py": {
+      "runtime": "python3.11"
+    }
+  }
+}
