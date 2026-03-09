@@ -84,8 +84,8 @@ const ArtifactViewer = ({ artifact }) => {
       className="glass-card overflow-hidden"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-neutral-200/60">
-        <div className="flex items-center space-x-3 min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 sm:p-5 border-b border-neutral-200/60">
+        <div className="flex items-center space-x-3 min-w-0 flex-1">
           <div className="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
             <FileText className="h-5 w-5 text-primary-600" />
           </div>
@@ -104,25 +104,25 @@ const ArtifactViewer = ({ artifact }) => {
             <div className="flex rounded-xl border border-neutral-200 overflow-hidden">
               <button
                 onClick={() => setViewMode('rendered')}
-                className={`px-3 py-1.5 caption font-medium transition-colors ${
+                className={`px-2.5 py-1.5 caption font-medium transition-colors ${
                   viewMode === 'rendered'
                     ? 'bg-primary-500 text-white'
                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
                 }`}
               >
                 <Eye className="h-3.5 w-3.5 inline mr-1" />
-                Preview
+                <span className="hidden xs:inline">Preview</span>
               </button>
               <button
                 onClick={() => setViewMode('raw')}
-                className={`px-3 py-1.5 caption font-medium transition-colors ${
+                className={`px-2.5 py-1.5 caption font-medium transition-colors ${
                   viewMode === 'raw'
                     ? 'bg-primary-500 text-white'
                     : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50'
                 }`}
               >
                 <Code className="h-3.5 w-3.5 inline mr-1" />
-                Raw
+                <span className="hidden xs:inline">Raw</span>
               </button>
             </div>
           )}

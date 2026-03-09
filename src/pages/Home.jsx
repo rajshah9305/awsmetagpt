@@ -161,7 +161,7 @@ const Home = () => {
                   </div>
                   <div>
                     <div className="badge-glass">
-                      <span className="status-indicator inline-block w-2 h-2 bg-success-500 rounded-full mr-2"></span>
+                      <span className="inline-block w-2 h-2 bg-success-500 rounded-full mr-2 animate-pulse"></span>
                       Agents Collaborating
                     </div>
                   </div>
@@ -170,7 +170,7 @@ const Home = () => {
                   Real-time Generation
                 </h3>
                 <p className="body-md text-neutral-600 mb-6">
-                  Watch as different AI agents work together to build your application, 
+                  Watch as different AI agents work together to build your application,
                   each contributing their specialized expertise in real-time.
                 </p>
                 <div className="space-y-3">
@@ -189,47 +189,47 @@ const Home = () => {
                       <span className="text-primary-600 font-semibold">75%</span>
                     </div>
                     <div className="progress-bar">
-                      <motion.div 
-                        className="progress-fill" 
+                      <motion.div
+                        className="progress-fill"
                         initial={{ width: 0 }}
                         animate={{ width: '75%' }}
-                        transition={{ duration: 1.5, ease: "easeOut" }}
+                        transition={{ duration: 1.5, ease: 'easeOut' }}
                       ></motion.div>
                     </div>
                   </div>
                   <div>
                     <div className="flex justify-between body-sm mb-2">
-                      <span className="text-neutral-700 font-medium">Testing & QA</span>
+                      <span className="text-neutral-700 font-medium">Testing &amp; QA</span>
                       <span className="text-neutral-500 font-semibold">45%</span>
                     </div>
                     <div className="progress-bar">
-                      <motion.div 
-                        className="progress-fill" 
+                      <motion.div
+                        className="progress-fill"
                         initial={{ width: 0 }}
                         animate={{ width: '45%' }}
-                        transition={{ duration: 1.5, ease: "easeOut", delay: 0.2 }}
+                        transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
                       ></motion.div>
                     </div>
                   </div>
                 </div>
-              </GlassCard>
 
-              {/* Floating tech stack badges */}
-              <div className="absolute -bottom-6 -right-6 grid grid-cols-2 gap-3">
-                {techStack.map((tech, idx) => (
-                  <motion.div
-                    key={tech.label}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="badge-glass backdrop-blur-lg px-3 py-2 shadow-elevation-2"
-                  >
-                    {React.createElement(tech.icon, { className: "w-4 h-4 inline-block mr-2 text-primary-600" })}
-                    <span className="overline">{tech.label}</span>
-                  </motion.div>
-                ))}
-              </div>
+                {/* Tech stack badges — inline below card content, no overflow */}
+                <div className="mt-6 pt-5 border-t border-neutral-200/60 grid grid-cols-2 gap-2">
+                  {techStack.map((tech, idx) => (
+                    <motion.div
+                      key={tech.label}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="badge-glass px-3 py-2 shadow-elevation-1 flex items-center"
+                    >
+                      {React.createElement(tech.icon, { className: "w-4 h-4 mr-2 text-primary-600 flex-shrink-0" })}
+                      <span className="overline">{tech.label}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </GlassCard>
             </motion.div>
           </div>
         </div>

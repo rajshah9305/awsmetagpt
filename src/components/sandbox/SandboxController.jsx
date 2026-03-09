@@ -146,15 +146,15 @@ const SandboxController = ({ generationId, artifacts, onStatusChange }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         <motion.button
           onClick={handleCreateSandbox}
           disabled={isLoading || sandboxStatus !== 'idle'}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary text-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Play className="w-4 h-4 mr-2" />
+          <Play className="w-4 h-4 mr-1.5 flex-shrink-0" />
           Create
         </motion.button>
 
@@ -163,7 +163,7 @@ const SandboxController = ({ generationId, artifacts, onStatusChange }) => {
           disabled={isLoading || !['ready', 'stopped'].includes(sandboxStatus)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-outline text-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Write Files
         </motion.button>
@@ -173,9 +173,9 @@ const SandboxController = ({ generationId, artifacts, onStatusChange }) => {
           disabled={isLoading || !['files_ready', 'stopped'].includes(sandboxStatus)}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-secondary text-sm py-2.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Play className="w-4 h-4 mr-2" />
+          <Play className="w-4 h-4 mr-1.5 flex-shrink-0" />
           Run App
         </motion.button>
 
@@ -184,15 +184,15 @@ const SandboxController = ({ generationId, artifacts, onStatusChange }) => {
           disabled={isLoading || sandboxStatus !== 'running'}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="btn bg-error-500 text-white hover:bg-error-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn text-sm py-2.5 bg-error-500 text-white hover:bg-error-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Square className="w-4 h-4 mr-2" />
+          <Square className="w-4 h-4 mr-1.5 flex-shrink-0" />
           Stop
         </motion.button>
       </div>
 
       {sandboxInfo && (
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="mt-5 sm:mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           {[
             { label: 'Project Type', value: sandboxInfo.project_type || 'Unknown' },
             { label: 'Files', value: sandboxInfo.file_count || 0 },

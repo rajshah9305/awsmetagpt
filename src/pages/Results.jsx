@@ -202,7 +202,7 @@ const Results = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center mesh-gradient">
-        <div className="text-center">
+        <div className="text-center px-4">
           <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
             <Loader className="h-8 w-8 text-white animate-spin" />
           </div>
@@ -215,21 +215,21 @@ const Results = () => {
   // In-progress view
   if (status && (status.status === 'running' || status.status === 'started' || status.status === 'initializing')) {
     return (
-      <div className="min-h-screen py-8 mesh-gradient">
+      <div className="min-h-screen py-6 sm:py-8 mesh-gradient">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-6 group">
+          <div className="mb-6 sm:mb-8">
+            <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 group">
               <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
               Back to Generator
             </Link>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="display-md text-neutral-900">AI Agents at Work</h1>
-                <p className="body-md text-neutral-500 mt-1 font-mono">ID: {generationId}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-display font-bold text-neutral-900">AI Agents at Work</h1>
+                <p className="body-sm text-neutral-500 mt-1 font-mono truncate">ID: {generationId}</p>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 badge-glass px-3 py-2">
+              <div className="flex items-center space-x-3 flex-shrink-0">
+                <div className="flex items-center space-x-2 badge-glass px-3 py-1.5">
                   <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
                   <span className="caption text-neutral-700 font-semibold">Live</span>
                 </div>
@@ -241,14 +241,14 @@ const Results = () => {
           </div>
 
           {/* Progress */}
-          <div className="glass-card p-6 mb-8">
+          <div className="glass-card p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex justify-between body-sm mb-3">
-              <span className="text-neutral-700 font-medium">
+              <span className="text-neutral-700 font-medium truncate mr-4">
                 {status.current_agent
                   ? `Agent: ${status.current_agent.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`
                   : 'Processing...'}
               </span>
-              <span className="text-primary-600 font-semibold">{Math.round(status.progress || 0)}%</span>
+              <span className="text-primary-600 font-semibold flex-shrink-0">{Math.round(status.progress || 0)}%</span>
             </div>
             <div className="progress-bar mb-3">
               <motion.div
@@ -259,7 +259,7 @@ const Results = () => {
               />
             </div>
             {status.message && (
-              <p className="body-sm text-neutral-600 text-center">{status.message}</p>
+              <p className="body-sm text-neutral-600 text-center line-clamp-2">{status.message}</p>
             )}
           </div>
 
@@ -309,23 +309,23 @@ const Results = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 mesh-gradient">
+    <div className="min-h-screen py-6 sm:py-8 mesh-gradient">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-6 group">
+        <div className="mb-6 sm:mb-8">
+          <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 group">
             <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Generator
           </Link>
 
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="display-md text-neutral-900">Generation Results</h1>
-              <p className="body-md text-neutral-500 mt-1 font-mono">ID: {generationId}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-display font-bold text-neutral-900">Generation Results</h1>
+              <p className="body-sm text-neutral-500 mt-1 font-mono truncate">ID: {generationId}</p>
             </div>
 
             {status && (
-              <div className={`inline-flex items-center px-4 py-2 rounded-full border ${getStatusColor(status.status)}`}>
+              <div className={`inline-flex items-center self-start sm:self-auto px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border flex-shrink-0 ${getStatusColor(status.status)}`}>
                 {getStatusIcon(status.status)}
                 <span className="ml-2 caption font-semibold capitalize">{status.status}</span>
               </div>
