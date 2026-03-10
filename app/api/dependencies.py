@@ -3,15 +3,17 @@ API dependencies for dependency injection
 """
 
 import uuid
-from typing import Optional
+from typing import TYPE_CHECKING
 from fastapi import Request, HTTPException, Depends, status
 
 from app.core.config import settings
 from app.core.exceptions import RateLimitException
-from app.services.orchestration import AgentOrchestrator
-from app.services.e2b_service import E2BService
-from app.services.bedrock_client import BedrockClient
 from .middleware import rate_limiter, request_validator
+
+if TYPE_CHECKING:
+    from app.services.orchestration import AgentOrchestrator
+    from app.services.e2b_service import E2BService
+    from app.services.bedrock_client import BedrockClient
 
 
 def get_client_ip(request: Request) -> str:
@@ -61,20 +63,17 @@ def validate_request(request: Request) -> None:
     request_validator.validate_user_agent(request)
 
 
-def get_orchestrator() -> AgentOrchestrator:
-    """Get agent orchestrator instance"""
+def get_orchestrator():
     from app.services import get_agent_orchestrator
     return get_agent_orchestrator()
 
 
-def get_e2b_service() -> E2BService:
-    """Get E2B service instance"""
+def get_e2b_service():
     from app.services import get_e2b_service
     return get_e2b_service()
 
 
-def get_bedrock_client() -> BedrockClient:
-    """Get Bedrock client instance"""
+def get_bedrock_client():
     from app.services import get_bedrock_client
     return get_bedrock_client()
 

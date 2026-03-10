@@ -340,7 +340,7 @@ async def health_check(services: dict = Depends(get_services)):
 
 
 @router.get("/models/bedrock")
-async def get_available_bedrock_models(services: dict = Depends(get_services)):
+async def get_available_bedrock_models():
     """Get available Bedrock models"""
     try:
         from app.models.schemas import BedrockModel
@@ -388,7 +388,7 @@ async def get_available_bedrock_models(services: dict = Depends(get_services)):
 
 
 @router.get("/agents/roles")
-async def get_agent_roles():
+async def get_agent_roles_endpoint():
     """Get available agent roles"""
     try:
         from app.models.schemas import AgentRole
