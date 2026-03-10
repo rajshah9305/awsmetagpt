@@ -15,15 +15,15 @@ A powerful application generator that combines **real MetaGPT multi-agent framew
 
 ### Core Components
 
-1. **MetaGPT Integration** (`app/services/metagpt_service.py`)
+1. **MetaGPT Integration** (`app/services/orchestration/`)
    - Real multi-agent execution using [MetaGPT framework](https://github.com/FoundationAgents/MetaGPT)
    - SoftwareCompany orchestration with specialized roles
-   - Workspace management and artifact generation
+   - Modular execution system with `MetaGPTExecutor`
 
-2. **E2B Sandbox Service** (`app/services/e2b_service.py`)
+2. **E2B Sandbox Service** (`app/services/sandbox/`)
    - Isolated code execution using [E2B sandboxes](https://e2b.dev/docs)
-   - Multi-framework support (React, Python, Node.js, HTML)
-   - Real-time application running and preview
+   - Multi-framework support via `ApplicationRunnerFactory`
+   - Secure file and process management
 
 3. **WebSocket Manager** (`app/services/websocket_manager.py`)
    - Real-time progress updates
@@ -31,9 +31,9 @@ A powerful application generator that combines **real MetaGPT multi-agent framew
    - Live communication
 
 4. **AWS Bedrock Client** (`app/services/bedrock_client.py`)
-   - Multiple AI model support
-   - Async model invocation
-   - Error handling and retries
+   - Multiple AI model support (Nova, Claude, Llama)
+   - Async model invocation using Boto3
+   - Error handling and fallback mechanisms
 
 ## Setup
 
@@ -213,9 +213,15 @@ The system uses **real MetaGPT agents** from the official framework:
 
 **Detailed Instructions:** See [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md)
 
-### Vercel Deployment (Alternative)
+### Vercel Deployment (Serverless)
 
-The repository also includes `vercel.json` for Vercel deployment. See deployment documentation for details.
+The repository is optimized for Vercel deployment using Serverless Functions:
+
+1. **Connect Repository**: Connect your GitHub repository to Vercel.
+2. **Configure Environment Variables**: Add all required variables (AWS, E2B, etc.) in Vercel Project Settings.
+3. **Deploy**: Vercel will automatically build the frontend and serve the FastAPI backend via `@vercel/python`.
+
+*Note: WebSockets are not supported in Vercel Serverless Functions. Real-time updates will fallback to polling or be disabled.*
 
 ## Project Structure
 
@@ -229,11 +235,11 @@ awsmetagpt/
 │   ├── models/                  # Pydantic schemas
 │   │   └── schemas.py          # Request/response models
 │   └── services/                # Core services
-│       ├── agent_orchestrator.py   # Multi-agent orchestration
-│       ├── metagpt_service.py      # Real MetaGPT integration
-│       ├── e2b_service.py          # E2B sandbox management
-│       ├── bedrock_client.py       # AWS Bedrock client
-│       └── websocket_manager.py    # WebSocket handling
+│       ├── orchestration/       # Multi-agent orchestration & MetaGPT
+│       ├── sandbox/             # E2B sandbox management logic
+│       ├── e2b_service.py       # E2B service interface
+│       ├── bedrock_client.py    # AWS Bedrock client
+│       └── websocket_manager.py # WebSocket handling
 ├── src/                         # Frontend React application
 │   ├── components/              # UI components
 │   ├── pages/                   # Application pages

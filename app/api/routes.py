@@ -23,27 +23,33 @@ router = APIRouter()
 # Generation endpoints
 @router.post("/generate", response_model=GenerationResponse)
 async def generate_app(
-    request: GenerationRequest,
+    gen_request: GenerationRequest,
     background_tasks: BackgroundTasks,
     request_data: dict = Depends(get_validated_request),
     services: dict = Depends(get_services),
     _health: None = Depends(check_system_health),
 ):
     """Generate an application using MetaGPT agents"""
+    request_id = request_data.get('request_id')
+    logger.info(f"Received generation request {request_id} for app type: {gen_request.app_type}")
+
     try:
         orchestrator = services['orchestrator']
         
         # Create session
         session_id = await orchestrator.create_session(
-            request=request,
-            client_id=request_data['request_id']
+            request=gen_request,
+            client_id=request_id
         )
         
         # Construct WebSocket URL
         ws_protocol = "wss" if not settings.DEBUG else "ws"
-        ws_host = request_data['request'].headers.get('host', 'localhost:8000')
-        websocket_url = f"{ws_protocol}://{ws_host}/ws/{request_data['request_id']}"
+        # Access FastAPI Request object from request_data
+        http_request = request_data.get('request')
+        ws_host = http_request.headers.get('host', 'localhost:8000') if http_request else 'localhost:8000'
+        websocket_url = f"{ws_protocol}://{ws_host}/ws/{request_id}"
         
+        logger.info(f"Successfully created session {session_id} for request {request_id}")
         return GenerationResponse(
             generation_id=session_id,
             status="initializing",
@@ -51,14 +57,14 @@ async def generate_app(
             progress=0,
             websocket_url=websocket_url,
             estimated_completion=None,
-            active_agents=[role.value for role in request.active_agents]
+            active_agents=[role.value for role in gen_request.active_agents]
         )
         
     except MetaGPTSystemException as e:
-        logger.error(f"Generation failed: {e}")
+        logger.error(f"Generation failed for request {request_id}: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Unexpected error in generation: {e}")
+        logger.error(f"Unexpected error in generation for request {request_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -68,11 +74,13 @@ async def get_generation_status(
     services: dict = Depends(get_services)
 ):
     """Get generation status"""
+    logger.debug(f"Getting status for generation {generation_id}")
     try:
         orchestrator = services['orchestrator']
         status = orchestrator.get_session_status(generation_id)
         
         if not status:
+            logger.warning(f"Generation session {generation_id} not found")
             raise HTTPException(status_code=404, detail="Generation not found")
         
         return SessionStatus(**status)
@@ -80,7 +88,7 @@ async def get_generation_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting generation status: {e}")
+        logger.error(f"Error getting status for generation {generation_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
@@ -367,16 +375,33 @@ async def get_available_bedrock_models():
         }
         
         models = []
-        for model in BedrockModel:
-            prefix = ".".join(model.value.split(".")[:2])
-            provider = provider_names.get(prefix, model.value.split(".")[0].title())
-            display_name = model_display_names.get(model.name, model.name.replace("_", " ").title())
-            models.append({
-                "id": model.value,
-                "name": display_name,
-                "provider": provider
-            })
+        try:
+            for model in BedrockModel:
+                parts = model.value.split(".")
+                prefix = ".".join(parts[:2]) if len(parts) >= 2 else parts[0]
+                provider = provider_names.get(prefix, parts[0].title())
+                display_name = model_display_names.get(model.name, model.name.replace("_", " ").title())
+                models.append({
+                    "id": model.value,
+                    "name": display_name,
+                    "provider": provider
+                })
+        except Exception as enum_err:
+            logger.error(f"Error iterating BedrockModel enum: {enum_err}")
+            # Fallback to a few default models if enum iteration fails
+            models = [
+                {"id": "us.amazon.nova-pro-v1:0", "name": "Nova Pro", "provider": "Amazon"},
+                {"id": "us.anthropic.claude-sonnet-4-20250514-v1:0", "name": "Claude Sonnet 4", "provider": "Anthropic"}
+            ]
+
+        if not models:
+            logger.warning("No models found in BedrockModel enum, using fallback")
+            models = [
+                {"id": "us.amazon.nova-pro-v1:0", "name": "Nova Pro", "provider": "Amazon"},
+                {"id": "us.anthropic.claude-sonnet-4-20250514-v1:0", "name": "Claude Sonnet 4", "provider": "Anthropic"}
+            ]
         
+        logger.info(f"Returning {len(models)} available Bedrock models")
         return {
             "models": models,
             "current_model": settings.BEDROCK_MODEL

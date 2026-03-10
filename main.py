@@ -38,24 +38,55 @@ async def lifespan(app: FastAPI):
     try:
         # Validate configuration
         missing_keys = settings.validate_required_keys()
-        # Skip validation in development mode
-        if missing_keys and settings.is_production():
-            raise ValueError(f"Missing required configuration: {', '.join(missing_keys)}")
         
         if missing_keys:
-            logger.warning(f"Missing optional configuration (development mode): {', '.join(missing_keys)}")
+            msg = f"Missing configuration: {', '.join(missing_keys)}"
+            if settings.is_production():
+                logger.error(f"❌ {msg}")
+                # We still continue but functionality will be limited
+            else:
+                logger.warning(f"⚠️ {msg} (development mode)")
         
-        # Initialize services
+        # Initialize services lazily or eagerly as needed
         logger.info("Initializing services...")
         
-        # Services are initialized lazily through dependency injection
-        logger.info("✅ All services initialized successfully")
+        # Check AWS Bedrock availability
+        try:
+            from app.services import get_bedrock_client
+            bedrock = get_bedrock_client()
+            if bedrock.client:
+                logger.info("✅ AWS Bedrock service ready")
+            else:
+                logger.warning("⚠️ AWS Bedrock service initialization skipped or failed")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize AWS Bedrock service: {e}")
+
+        # Check MetaGPT status
+        try:
+            from app.services import get_agent_orchestrator
+            orchestrator = get_agent_orchestrator()
+            if orchestrator:
+                logger.info("✅ MetaGPT Orchestrator ready")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize MetaGPT Orchestrator: {e}")
+
+        # Check E2B status
+        try:
+            from app.services import get_e2b_service
+            e2b = get_e2b_service()
+            if e2b:
+                logger.info("✅ E2B Sandbox service ready")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize E2B Sandbox service: {e}")
         
+        logger.info("✅ System startup sequence completed")
         yield
         
     except Exception as e:
-        logger.error(f"❌ Startup failed: {e}")
-        raise
+        logger.error(f"❌ Critical startup failure: {e}")
+        if settings.is_production():
+            raise
+        yield
     finally:
         # Shutdown
         logger.info("🛑 Shutting down MetaGPT + E2B Integration System")
@@ -91,22 +122,31 @@ app.include_router(api_router, prefix="/api/v1")
 
 # Serve static files if dist directory exists
 if os.path.exists("dist"):
-    # Mount static files, but let API routes take precedence
-    from fastapi.responses import FileResponse
-    
-    @app.get("/", include_in_schema=False)
-    async def serve_frontend():
-        """Serve the frontend application"""
-        return FileResponse("dist/index.html")
-    
     # Mount static assets
     app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
+
+    # Serve the frontend application for any path that's not caught by API routes (SPA support)
+    @app.get("/{rest_of_path:path}", include_in_schema=False)
+    async def serve_frontend(rest_of_path: str):
+        """Serve the frontend application"""
+        # Exclude API and documentation routes from catch-all
+        if rest_of_path.startswith("api/v1") or rest_of_path == "health" or \
+           rest_of_path.startswith("docs") or rest_of_path.startswith("redoc"):
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+
+        return FileResponse("dist/index.html")
 
 
 # WebSocket endpoint
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     """WebSocket endpoint for real-time communication"""
+    # Check if running on Vercel (serverless doesn't support WebSockets)
+    if os.environ.get("VERCEL"):
+        logger.warning(f"WebSocket connection attempted on Vercel (client: {client_id}). WebSockets are not supported in Vercel Serverless Functions.")
+        await websocket.close(code=1000, reason="WebSockets not supported in serverless environment")
+        return
+
     try:
         await websocket_manager.connect(websocket, client_id)
         
