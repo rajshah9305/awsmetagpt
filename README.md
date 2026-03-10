@@ -39,7 +39,7 @@ A powerful application generator that combines **real MetaGPT multi-agent framew
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.11
 - Node.js 16+
 - AWS Account with Bedrock access
 - E2B API key ([Get it here](https://e2b.dev))
