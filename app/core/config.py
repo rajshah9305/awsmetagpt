@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Bedrock
     BEDROCK_REGION: str = Field(default="us-west-2")
-    BEDROCK_MODEL: str = Field(default="us.amazon.nova-pro-v1:0")
+    BEDROCK_MODEL: str = Field(default="anthropic.claude-3-haiku-20240307-v1:0")
 
     # MetaGPT
     METAGPT_WORKSPACE: str = Field(default="./workspace")

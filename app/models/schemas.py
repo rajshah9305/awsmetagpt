@@ -17,19 +17,20 @@ class AgentRole(str, Enum):
     DEVOPS = "devops"
 
 class BedrockModel(str, Enum):
-    """Available AWS Bedrock models (Latest 2025 - Using Inference Profiles)"""
-    # Amazon Nova models (usually available by default)
-    NOVA_PRO = "us.amazon.nova-pro-v1:0"
-    NOVA_LITE = "us.amazon.nova-lite-v1:0"
-    NOVA_MICRO = "us.amazon.nova-micro-v1:0"
-    # Meta Llama models (usually available)
-    LLAMA_33_70B = "us.meta.llama3-3-70b-instruct-v1:0"
-    LLAMA_32_90B = "us.meta.llama3-2-90b-instruct-v1:0"
-    LLAMA_32_11B = "us.meta.llama3-2-11b-instruct-v1:0"
-    # Claude models (using inference profiles)
-    CLAUDE_SONNET_4 = "us.anthropic.claude-sonnet-4-20250514-v1:0"
-    CLAUDE_HAIKU_45 = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
-    CLAUDE_OPUS_4 = "us.anthropic.claude-opus-4-20250514-v1:0"
+    """Available AWS Bedrock models (us-east-1, ON_DEMAND + INFERENCE_PROFILE)"""
+    # Anthropic Claude (ON_DEMAND)
+    CLAUDE_3_HAIKU = "anthropic.claude-3-haiku-20240307-v1:0"
+    CLAUDE_3_SONNET = "anthropic.claude-3-sonnet-20240229-v1:0"
+    CLAUDE_35_SONNET = "anthropic.claude-3-5-sonnet-20240620-v1:0"
+    # Meta Llama (ON_DEMAND)
+    LLAMA3_8B = "meta.llama3-8b-instruct-v1:0"
+    LLAMA3_70B = "meta.llama3-70b-instruct-v1:0"
+    # Mistral (ON_DEMAND)
+    MISTRAL_7B = "mistral.mistral-7b-instruct-v0:2"
+    MISTRAL_LARGE = "mistral.mistral-large-2402-v1:0"
+    # Cohere (ON_DEMAND)
+    COHERE_COMMAND_R = "cohere.command-r-v1:0"
+    COHERE_COMMAND_R_PLUS = "cohere.command-r-plus-v1:0"
 
 class AppType(str, Enum):
     """Types of applications that can be generated"""
@@ -59,14 +60,12 @@ class GenerationRequest(BaseModel):
         description="Type of application to generate"
     )
     preferred_model: BedrockModel = Field(
-        default=BedrockModel.CLAUDE_SONNET_4, 
+        default=BedrockModel.CLAUDE_3_HAIKU,
         description="Preferred Bedrock model"
     )
     active_agents: List[AgentRole] = Field(
         default_factory=lambda: [AgentRole.PRODUCT_MANAGER, AgentRole.ARCHITECT, AgentRole.ENGINEER], 
-        description="Agents to include in generation",
-        min_items=1,
-        max_items=6
+        description="Agents to include in generation"
     )
     additional_requirements: Optional[str] = Field(
         None, 

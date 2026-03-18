@@ -361,32 +361,30 @@ async def get_available_bedrock_models():
         from app.models.schemas import BedrockModel
         
         provider_names = {
-            "us.amazon": "Amazon",
-            "us.meta": "Meta",
-            "us.anthropic": "Anthropic",
-            "amazon": "Amazon",
-            "meta": "Meta",
             "anthropic": "Anthropic",
+            "meta": "Meta",
+            "mistral": "Mistral AI",
+            "cohere": "Cohere",
+            "amazon": "Amazon",
         }
-        
+
         model_display_names = {
-            "NOVA_PRO": "Nova Pro",
-            "NOVA_LITE": "Nova Lite",
-            "NOVA_MICRO": "Nova Micro",
-            "LLAMA_33_70B": "Llama 3.3 70B",
-            "LLAMA_32_90B": "Llama 3.2 90B",
-            "LLAMA_32_11B": "Llama 3.2 11B",
-            "CLAUDE_SONNET_4": "Claude Sonnet 4",
-            "CLAUDE_HAIKU_45": "Claude Haiku 4.5",
-            "CLAUDE_OPUS_4": "Claude Opus 4",
+            "CLAUDE_3_HAIKU": "Claude 3 Haiku",
+            "CLAUDE_3_SONNET": "Claude 3 Sonnet",
+            "CLAUDE_35_SONNET": "Claude 3.5 Sonnet",
+            "LLAMA3_8B": "Llama 3 8B",
+            "LLAMA3_70B": "Llama 3 70B",
+            "MISTRAL_7B": "Mistral 7B",
+            "MISTRAL_LARGE": "Mistral Large",
+            "COHERE_COMMAND_R": "Command R",
+            "COHERE_COMMAND_R_PLUS": "Command R+",
         }
-        
+
         models = []
         try:
             for model in BedrockModel:
-                parts = model.value.split(".")
-                prefix = ".".join(parts[:2]) if len(parts) >= 2 else parts[0]
-                provider = provider_names.get(prefix, parts[0].title())
+                prefix = model.value.split(".")[0]
+                provider = provider_names.get(prefix, prefix.title())
                 display_name = model_display_names.get(model.name, model.name.replace("_", " ").title())
                 models.append({
                     "id": model.value,
@@ -395,17 +393,16 @@ async def get_available_bedrock_models():
                 })
         except Exception as enum_err:
             logger.error(f"Error iterating BedrockModel enum: {enum_err}")
-            # Fallback to a few default models if enum iteration fails
             models = [
-                {"id": "us.amazon.nova-pro-v1:0", "name": "Nova Pro", "provider": "Amazon"},
-                {"id": "us.anthropic.claude-sonnet-4-20250514-v1:0", "name": "Claude Sonnet 4", "provider": "Anthropic"}
+                {"id": "anthropic.claude-3-haiku-20240307-v1:0", "name": "Claude 3 Haiku", "provider": "Anthropic"},
+                {"id": "anthropic.claude-3-sonnet-20240229-v1:0", "name": "Claude 3 Sonnet", "provider": "Anthropic"},
             ]
 
         if not models:
             logger.warning("No models found in BedrockModel enum, using fallback")
             models = [
-                {"id": "us.amazon.nova-pro-v1:0", "name": "Nova Pro", "provider": "Amazon"},
-                {"id": "us.anthropic.claude-sonnet-4-20250514-v1:0", "name": "Claude Sonnet 4", "provider": "Anthropic"}
+                {"id": "anthropic.claude-3-haiku-20240307-v1:0", "name": "Claude 3 Haiku", "provider": "Anthropic"},
+                {"id": "anthropic.claude-3-sonnet-20240229-v1:0", "name": "Claude 3 Sonnet", "provider": "Anthropic"},
             ]
         
         logger.info(f"Returning {len(models)} available Bedrock models")
