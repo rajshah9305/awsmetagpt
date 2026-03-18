@@ -104,13 +104,6 @@ def get_services() -> dict:
 
 def check_system_health(services: dict = Depends(get_services)) -> None:
     """Check system health before processing requests"""
-    if settings.ENABLE_BEDROCK and settings.is_production():
-        bedrock = services['bedrock_client']
-        if not bedrock.client:
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="AI service unavailable"
-            )
 
     orchestrator = services['orchestrator']
     stats = orchestrator.get_statistics()

@@ -82,7 +82,8 @@ const Generator = () => {
         active_agents:   fetchedRoles.map(r => r.id),
       }))
     } catch (err) {
-      setLoadError(err.message || 'Failed to load configuration from server')
+      const msg = typeof err === 'string' ? err : err?.message || 'Failed to load configuration from server'
+      setLoadError(typeof msg === 'string' ? msg : 'Failed to load configuration from server')
     } finally {
       setIsLoadingData(false)
     }

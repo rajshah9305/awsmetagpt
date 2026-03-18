@@ -24,12 +24,9 @@ class BedrockClient:
         """Initialize Bedrock client with AWS credentials"""
         try:
             if not settings.AWS_ACCESS_KEY_ID or not settings.AWS_SECRET_ACCESS_KEY:
-                if settings.is_production():
-                    raise ValueError("AWS credentials are required in production mode")
-                else:
-                    logger.warning("⚠️ AWS credentials not configured - Bedrock features will be disabled")
-                    self.client = None
-                    return
+                logger.warning("⚠️ AWS credentials not configured - Bedrock features will be disabled")
+                self.client = None
+                return
             
             self.client = boto3.client(
                 'bedrock-runtime',
@@ -39,16 +36,10 @@ class BedrockClient:
             )
             logger.info("✅ AWS Bedrock client initialized successfully")
         except NoCredentialsError:
-            error_msg = "❌ AWS credentials not found"
-            logger.error(error_msg)
-            if settings.is_production():
-                raise ValueError(error_msg)
+            logger.error("❌ AWS credentials not found")
             self.client = None
         except Exception as e:
-            error_msg = f"❌ Failed to initialize Bedrock client: {e}"
-            logger.error(error_msg)
-            if settings.is_production():
-                raise ValueError(error_msg)
+            logger.error(f"❌ Failed to initialize Bedrock client: {e}")
             self.client = None
     
     async def invoke_model(
