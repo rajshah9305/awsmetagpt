@@ -96,11 +96,8 @@ class MetaGPTExecutor:
             raise MetaGPTException(f"MetaGPT setup failed: {e}")
     
     def update_model(self, model: BedrockModel) -> None:
-        """Update MetaGPT configuration with new model"""
-        # Note: This method is kept for compatibility but MetaGPT uses OpenAI/Anthropic
-        # AWS Bedrock models are used separately through bedrock_client
-        logger.info(f"Bedrock model {model.value} will be used via bedrock_client, not MetaGPT")
-        # MetaGPT continues to use the configured OpenAI or Anthropic API
+        """Note: MetaGPT uses OpenAI/Anthropic API; Bedrock models are used via bedrock_client separately."""
+        logger.debug(f"Bedrock model {model.value} selected; MetaGPT continues using configured API provider")
     
     async def execute_generation(
         self, 

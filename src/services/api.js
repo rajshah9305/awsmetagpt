@@ -66,6 +66,8 @@ export const generateApp = async (requestData) => {
   return await api.post('/generate', requestData)
 }
 
+export const getStreamUrl = (generationId) => `/api/v1/generate/${generationId}/stream`
+
 export const getGenerationStatus = async (generationId) => {
   return await api.get(`/generate/${generationId}/status`)
 }

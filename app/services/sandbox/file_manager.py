@@ -63,10 +63,9 @@ class SandboxFileManager:
     async def _write_single_file(self, artifact: Dict[str, Any]):
         """Write a single file to sandbox"""
         # Validate artifact
-        required_fields = ['name', 'content']
-        for field in required_fields:
-            if field not in artifact:
-                raise SandboxException(f"Artifact missing required field: {field}")
+        for required in ('name', 'content'):
+            if required not in artifact:
+                raise SandboxException(f"Artifact missing required field: {required}")
         
         file_name = artifact['name']
         content = artifact['content']
@@ -115,10 +114,14 @@ class SandboxFileManager:
         return safe_name
     
     def _determine_file_path(self, filename: str, artifact: Dict) -> str:
-        """Determine appropriate file path"""
-        # Use provided path if available
+        """Determine appropriate file path, preventing path traversal"""
+        # Use provided path if available, but sanitize it
         if 'file_path' in artifact and artifact['file_path']:
-            return artifact['file_path']
+            raw = artifact['file_path']
+            # Strip leading slashes and collapse any .. segments
+            parts = [p for p in raw.replace('\\', '/').split('/') if p and p != '..']
+            if parts:
+                return '/'.join(parts)
         
         # Determine based on file type and name
         name_lower = filename.lower()

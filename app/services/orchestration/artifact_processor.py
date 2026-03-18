@@ -202,16 +202,6 @@ class ArtifactProcessor:
         if artifact['size'] > settings.MAX_FILE_SIZE:
             logger.warning(f"Artifact {artifact['id']} exceeds size limit")
             return False
-        
-        # Check for suspicious content
-        content = artifact['content'].lower()
-        suspicious_patterns = ['<script>', 'eval(', 'exec(', 'system(']
-        
-        for pattern in suspicious_patterns:
-            if pattern in content:
-                logger.warning(f"Suspicious pattern '{pattern}' found in artifact {artifact['id']}")
-                return False
-        
         return True
     
     def _enhance_artifact(self, artifact: Dict) -> Dict:

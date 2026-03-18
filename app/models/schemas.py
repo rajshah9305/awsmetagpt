@@ -2,8 +2,8 @@
 Enhanced Pydantic models for production-ready API requests and responses
 """
 
-from pydantic import BaseModel, Field, validator
-from typing import List, Optional, Dict, Any, Union
+from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Dict, Any
 from enum import Enum
 from datetime import datetime
 
@@ -89,10 +89,10 @@ class GenerationRequest(BaseModel):
         le=120
     )
     
-    @validator('tech_stack_preferences')
+    @field_validator('tech_stack_preferences')
+    @classmethod
     def validate_tech_stack(cls, v):
         if v:
-            # Remove empty strings and limit length
             v = [tech.strip() for tech in v if tech.strip()]
             if len(v) > 10:
                 raise ValueError("Maximum 10 technology preferences allowed")
@@ -115,7 +115,7 @@ class GenerationResponse(BaseModel):
     status: str = Field(..., description="Current generation status")
     message: str = Field(..., description="Status message")
     progress: int = Field(ge=0, le=100, description="Progress percentage")
-    websocket_url: Optional[str] = Field(None, description="WebSocket URL for real-time updates")
+    stream_url: Optional[str] = Field(None, description="SSE stream URL for real-time updates")
     estimated_completion: Optional[datetime] = Field(None, description="Estimated completion time")
     active_agents: Optional[List[str]] = Field(None, description="List of active agent roles")
 

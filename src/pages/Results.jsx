@@ -5,11 +5,11 @@ import toast from 'react-hot-toast'
 import { 
   ArrowLeft, Download, CheckCircle, 
   Clock, AlertCircle, Loader, Bot, FileText,
-  Code, FileCode, BookOpen, Settings
+  FileCode, BookOpen, Settings
 } from 'lucide-react'
 
 import { getGenerationStatus, getGenerationArtifacts } from '../services/api'
-import WebSocketService from '../services/websocket'
+import SSEService from '../services/sse'
 import ArtifactViewer from '../components/ArtifactViewer'
 import E2BSandboxPreview from '../components/E2BSandboxPreview'
 
@@ -18,7 +18,7 @@ const Results = () => {
   const [status, setStatus] = useState(null)
   const [artifacts, setArtifacts] = useState([])
   const [selectedArtifact, setSelectedArtifact] = useState(null)
-  const [wsService] = useState(() => new WebSocketService())
+  const [sseService] = useState(() => new SSEService())
   const [isLoading, setIsLoading] = useState(true)
   const [pollingInterval, setPollingInterval] = useState(null)
 
@@ -51,7 +51,7 @@ const Results = () => {
     }
     
     return () => {
-      wsService.disconnect()
+      sseService.disconnect()
       if (pollingInterval) {
         clearInterval(pollingInterval)
       }
@@ -71,7 +71,7 @@ const Results = () => {
           setSelectedArtifact(artifactsData[0])
         }
       } else if (statusData.status === 'running' || statusData.status === 'started' || statusData.status === 'initializing') {
-        await connectWebSocket()
+        await connectSSE()
         startPolling()
       }
       
@@ -88,17 +88,17 @@ const Results = () => {
     setPollingInterval(interval)
   }
 
-  const connectWebSocket = async () => {
+  const connectSSE = async () => {
     try {
-      await wsService.connect(generationId)
-      wsService.on('progress', handleProgressUpdate)
-      wsService.on('agent_update', handleAgentUpdate)
-      wsService.on('artifact_update', handleArtifactUpdate)
-      wsService.on('message', handleGenericMessage)
-      wsService.on('error', handleWebSocketError)
-      wsService.on('close', handleWebSocketClose)
+      await sseService.connect(generationId)
+      sseService.on('progress', handleProgressUpdate)
+      sseService.on('agent_update', handleAgentUpdate)
+      sseService.on('artifact_update', handleArtifactUpdate)
+      sseService.on('message', handleGenericMessage)
+      sseService.on('error', handleSSEError)
+      sseService.on('close', handleSSEClose)
     } catch (error) {
-      console.error('Failed to connect WebSocket:', error)
+      console.error('Failed to connect SSE:', error)
       startPolling()
     }
   }
@@ -146,11 +146,11 @@ const Results = () => {
     }
   }
 
-  const handleWebSocketError = () => {
+  const handleSSEError = () => {
     if (!pollingInterval) startPolling()
   }
 
-  const handleWebSocketClose = () => {
+  const handleSSEClose = () => {
     if (status && (status.status === 'running' || status.status === 'started') && !pollingInterval) {
       startPolling()
     }
@@ -203,10 +203,10 @@ const Results = () => {
     return (
       <div className="min-h-screen flex items-center justify-center mesh-gradient">
         <div className="text-center px-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
-            <Loader className="h-8 w-8 text-white animate-spin" />
+          <div className="w-14 h-14 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
+            <Loader className="h-7 w-7 text-white animate-spin" />
           </div>
-          <p className="body-lg text-neutral-600">Loading generation results...</p>
+          <p className="text-sm text-neutral-500">Loading generation results...</p>
         </div>
       </div>
     )
@@ -215,8 +215,8 @@ const Results = () => {
   // In-progress view
   if (status && (status.status === 'running' || status.status === 'started' || status.status === 'initializing')) {
     return (
-      <div className="min-h-screen py-6 sm:py-8 mesh-gradient">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen py-8 sm:py-12 mesh-gradient">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6 sm:mb-8">
             <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 group">
               <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -309,8 +309,8 @@ const Results = () => {
   }
 
   return (
-    <div className="min-h-screen py-6 sm:py-8 mesh-gradient">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 sm:py-12 mesh-gradient">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
           <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 group">

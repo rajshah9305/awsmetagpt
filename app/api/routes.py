@@ -2,7 +2,8 @@
 Clean API routes with proper separation of concerns
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi.responses import StreamingResponse
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
@@ -24,7 +25,6 @@ router = APIRouter()
 @router.post("/generate", response_model=GenerationResponse)
 async def generate_app(
     gen_request: GenerationRequest,
-    background_tasks: BackgroundTasks,
     request_data: dict = Depends(get_validated_request),
     services: dict = Depends(get_services),
     _health: None = Depends(check_system_health),
@@ -42,20 +42,13 @@ async def generate_app(
             client_id=request_id
         )
         
-        # Construct WebSocket URL
-        ws_protocol = "wss" if not settings.DEBUG else "ws"
-        # Access FastAPI Request object from request_data
-        http_request = request_data.get('request')
-        ws_host = http_request.headers.get('host', 'localhost:8000') if http_request else 'localhost:8000'
-        websocket_url = f"{ws_protocol}://{ws_host}/ws/{request_id}"
-        
         logger.info(f"Successfully created session {session_id} for request {request_id}")
         return GenerationResponse(
             generation_id=session_id,
             status="initializing",
             message="Generation started successfully",
             progress=0,
-            websocket_url=websocket_url,
+            stream_url=f"/api/v1/generate/{session_id}/stream",
             estimated_completion=None,
             active_agents=[role.value for role in gen_request.active_agents]
         )
@@ -90,6 +83,20 @@ async def get_generation_status(
     except Exception as e:
         logger.error(f"Error getting status for generation {generation_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/generate/{generation_id}/stream")
+async def stream_generation_events(generation_id: str):
+    """SSE stream for real-time generation progress updates"""
+    from app.services.sse_manager import event_stream
+    return StreamingResponse(
+        event_stream(generation_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/generate/{generation_id}/artifacts", response_model=List[GeneratedArtifact])

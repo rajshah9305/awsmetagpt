@@ -1,278 +1,218 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { 
-  Brain, Users, Code, Cloud, Zap, ArrowRight, 
-  CheckCircle, Sparkles, Rocket, Bot, 
-  Cpu, GitBranch, Database, Shield
+import {
+  Brain, Users, Code, Cloud, Zap, ArrowRight,
+  CheckCircle, Bot, Cpu, GitBranch, Database, Shield
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 import AnimatedBackground from '../components/AnimatedBackground'
 import HeroSection from '../components/HeroSection'
 import FeatureCard from '../components/FeatureCard'
 import GlassCard from '../components/GlassCard'
-import { Link } from 'react-router-dom'
 
-const Home = () => {
-  const features = [
-    {
-      icon: Brain,
-      title: 'AI-Powered Generation',
-      description: 'Leverage cutting-edge AWS Bedrock foundation models for intelligent, context-aware application creation.'
-    },
-    {
-      icon: Users,
-      title: 'Multi-Agent Collaboration',
-      description: 'Watch MetaGPT agents work together like a real development team - each with specialized expertise.'
-    },
-    {
-      icon: Code,
-      title: 'Complete Applications',
-      description: 'Generate production-ready, full-stack applications with comprehensive documentation and tests.'
-    },
-    {
-      icon: Cloud,
-      title: 'Cloud-Native Architecture',
-      description: 'Built for modern development with scalability, security, and best practices baked in.'
-    },
-    {
-      icon: Zap,
-      title: 'Lightning Fast',
-      description: 'From idea to working prototype in minutes. No more weeks of development for MVPs.'
-    },
-    {
-      icon: Shield,
-      title: 'Enterprise Ready',
-      description: 'Security-first design with industry-standard practices and compliance considerations.'
-    }
-  ]
+const features = [
+  { icon: Brain,  title: 'AI-Powered Generation',      description: 'Leverage AWS Bedrock foundation models for intelligent, context-aware application creation.' },
+  { icon: Users,  title: 'Multi-Agent Collaboration',  description: 'MetaGPT agents work together like a real dev team — each with specialized expertise.' },
+  { icon: Code,   title: 'Complete Applications',      description: 'Generate production-ready full-stack apps with documentation and tests included.' },
+  { icon: Cloud,  title: 'Cloud-Native Architecture',  description: 'Built for modern development with scalability and security baked in from the start.' },
+  { icon: Zap,    title: 'Lightning Fast',             description: 'From idea to working prototype in minutes, not weeks.' },
+  { icon: Shield, title: 'Enterprise Ready',           description: 'Security-first design with industry-standard practices and compliance considerations.' },
+]
 
-  const benefits = [
-    'Natural language to working application',
-    'Multiple AI models for different tasks',
-    'Real-time generation progress tracking',
-    'Complete project documentation',
-    'Ready-to-deploy code structure',
-    'No coding experience required',
-    'Customizable tech stack options',
-    'Built-in testing & quality assurance'
-  ]
+const benefits = [
+  'Natural language to working application',
+  'Multiple AI models for different tasks',
+  'Real-time generation progress tracking',
+  'Complete project documentation',
+  'Ready-to-deploy code structure',
+  'No coding experience required',
+  'Customizable tech stack options',
+  'Built-in testing & quality assurance',
+]
 
-  const techStack = [
-    { icon: Cpu, label: 'AWS Bedrock' },
-    { icon: Bot, label: 'MetaGPT' },
-    { icon: GitBranch, label: 'Git Ready' },
-    { icon: Database, label: 'Full Stack' },
-  ]
+const techStack = [
+  { icon: Cpu,       label: 'AWS Bedrock' },
+  { icon: Bot,       label: 'MetaGPT' },
+  { icon: GitBranch, label: 'Git Ready' },
+  { icon: Database,  label: 'Full Stack' },
+]
 
-  return (
-    <AnimatedBackground variant="default">
-      {/* Hero Section */}
-      <HeroSection />
+const Home = () => (
+  <AnimatedBackground>
+    <HeroSection />
 
-      {/* Features Section */}
-      <section className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+    {/* ── Features ── */}
+    <section className="py-20 sm:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-14"
+        >
+          <h2 className="display-md text-neutral-900 mb-4">Powered by Advanced AI</h2>
+          <p className="body-lg text-neutral-500 max-w-xl mx-auto">
+            Combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {features.map((f, i) => (
+            <FeatureCard key={f.title} {...f} delay={i * 0.08} />
+          ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ── Benefits ── */}
+    <section className="py-20 sm:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+
+          {/* Left */}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-16"
           >
-            <h2 className="display-md text-neutral-900 mb-4">
-              Powered by Advanced AI
-            </h2>
-            <p className="body-xl text-neutral-600 max-w-2xl mx-auto">
-              Combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models
+            <h2 className="display-md text-neutral-900 mb-5">Why Choose Our Platform?</h2>
+            <p className="body-lg text-neutral-500 mb-8">
+              Experience the future of software development with AI-powered automation
+              that doesn't compromise on quality.
             </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {benefits.map((b, i) => (
+                <motion.div
+                  key={b}
+                  initial={{ opacity: 0, x: -16 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.04 }}
+                  className="flex items-start space-x-2.5"
+                >
+                  <CheckCircle className="h-4 w-4 text-success-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-sm text-neutral-600">{b}</span>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <FeatureCard
-                key={feature.title}
-                icon={feature.icon}
-                title={feature.title}
-                description={feature.description}
-                delay={index * 0.1}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits Section with Glass Card */}
-      <section className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="display-md text-neutral-900 mb-6">
-                Why Choose Our Platform?
-              </h2>
-              <p className="body-lg text-neutral-600 mb-8">
-                Experience the future of software development with AI-powered automation that doesn't compromise on quality.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {benefits.map((benefit, index) => (
-                  <motion.div
-                    key={benefit}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.05 }}
-                    className="flex items-start space-x-3"
-                  >
-                    <CheckCircle className="h-5 w-5 text-success-600 flex-shrink-0 mt-1" />
-                    <span className="body-md text-neutral-700">{benefit}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="relative"
-            >
-              <GlassCard className="overflow-hidden">
-                <div className="flex items-center space-x-4 mb-6">
-                  <div className="flex -space-x-3">
-                    {[
-                      { icon: Bot, color: 'from-primary-400 to-primary-600' },
-                      { icon: Code, color: 'from-success-400 to-success-600' },
-                      { icon: Zap, color: 'from-accent-400 to-accent-600' },
-                    ].map((agent, idx) => (
-                      <motion.div
-                        key={idx}
-                        className={`w-10 h-10 bg-gradient-to-br ${agent.color} rounded-full flex items-center justify-center border-2 border-white shadow-lg`}
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ duration: 2, delay: idx * 0.2, repeat: Infinity }}
-                      >
-                        {React.createElement(agent.icon, { className: "h-5 w-5 text-white" })}
-                      </motion.div>
-                    ))}
-                  </div>
-                  <div>
-                    <div className="badge-glass">
-                      <span className="inline-block w-2 h-2 bg-success-500 rounded-full mr-2 animate-pulse"></span>
-                      Agents Collaborating
-                    </div>
-                  </div>
-                </div>
-                <h3 className="body-xl font-display font-semibold text-neutral-900 mb-3">
-                  Real-time Generation
-                </h3>
-                <p className="body-md text-neutral-600 mb-6">
-                  Watch as different AI agents work together to build your application,
-                  each contributing their specialized expertise in real-time.
-                </p>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between body-sm mb-2">
-                      <span className="text-neutral-700 font-medium">Architecture Design</span>
-                      <span className="text-primary-600 font-semibold">100%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div className="progress-fill w-full"></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between body-sm mb-2">
-                      <span className="text-neutral-700 font-medium">Code Generation</span>
-                      <span className="text-primary-600 font-semibold">75%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <motion.div
-                        className="progress-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: '75%' }}
-                        transition={{ duration: 1.5, ease: 'easeOut' }}
-                      ></motion.div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between body-sm mb-2">
-                      <span className="text-neutral-700 font-medium">Testing &amp; QA</span>
-                      <span className="text-neutral-500 font-semibold">45%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <motion.div
-                        className="progress-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: '45%' }}
-                        transition={{ duration: 1.5, ease: 'easeOut', delay: 0.2 }}
-                      ></motion.div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tech stack badges — inline below card content, no overflow */}
-                <div className="mt-6 pt-5 border-t border-neutral-200/60 grid grid-cols-2 gap-2">
-                  {techStack.map((tech, idx) => (
+          {/* Right — demo card */}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <GlassCard hover={false} className="overflow-hidden">
+              {/* Agent avatars */}
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="flex -space-x-2.5">
+                  {[
+                    { icon: Bot,  color: 'from-primary-400 to-primary-600' },
+                    { icon: Code, color: 'from-secondary-400 to-secondary-600' },
+                    { icon: Zap,  color: 'from-accent-400 to-accent-600' },
+                  ].map((a, idx) => (
                     <motion.div
-                      key={tech.label}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: idx * 0.1 }}
-                      className="badge-glass px-3 py-2 shadow-elevation-1 flex items-center"
+                      key={idx}
+                      className={`w-9 h-9 bg-gradient-to-br ${a.color} rounded-full flex items-center justify-center border-2 border-white shadow-md`}
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ duration: 2.5, delay: idx * 0.3, repeat: Infinity }}
                     >
-                      {React.createElement(tech.icon, { className: "w-4 h-4 mr-2 text-primary-600 flex-shrink-0" })}
-                      <span className="overline">{tech.label}</span>
+                      {React.createElement(a.icon, { className: 'h-4 w-4 text-white' })}
                     </motion.div>
                   ))}
                 </div>
-              </GlassCard>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+                <span className="badge-glass text-xs">
+                  <span className="inline-block w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5 animate-pulse" />
+                  Agents Collaborating
+                </span>
+              </div>
 
-      {/* CTA Section */}
-      <section className="py-24 relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <GlassCard className="text-center bg-gradient-to-br from-primary-500/10 to-secondary-500/10 border-primary-400/20 p-12">
-              <motion.div
-                animate={{ rotate: [0, 10, 0, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="inline-block mb-6"
-              >
-                <Rocket className="h-16 w-16 text-primary-600" />
-              </motion.div>
-              <h2 className="display-md text-neutral-900 mb-4">
-                Ready to Build Your Next App?
-              </h2>
-              <p className="body-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
-                Join thousands of developers who are already using AI to accelerate their development process and bring ideas to life faster than ever.
+              <h3 className="text-lg font-semibold text-neutral-900 mb-2">Real-time Generation</h3>
+              <p className="text-sm text-neutral-500 mb-6 leading-relaxed">
+                Watch as different AI agents work together to build your application,
+                each contributing their specialized expertise in real-time.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/generate" className="btn-primary body-lg px-10 py-4 shadow-glow-lg">
-                  <span className="relative z-10">Get Started Now</span>
-                  <ArrowRight className="ml-2 h-6 w-6 relative z-10 group-hover:translate-x-1 transition-transform" />
-                </Link>
-                <Link to="/about" className="btn-outline body-lg px-10 py-4">
-                  Learn More
-                </Link>
+
+              {/* Progress bars */}
+              <div className="space-y-4">
+                {[
+                  { label: 'Architecture Design', pct: 100, done: true },
+                  { label: 'Code Generation',     pct: 75,  done: false },
+                  { label: 'Testing & QA',        pct: 45,  done: false },
+                ].map(({ label, pct, done }) => (
+                  <div key={label}>
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className="font-medium text-neutral-700">{label}</span>
+                      <span className={done ? 'text-primary-600 font-semibold' : 'text-neutral-400'}>{pct}%</span>
+                    </div>
+                    <div className="progress-bar">
+                      <motion.div
+                        className="progress-fill"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${pct}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tech badges */}
+              <div className="mt-6 pt-5 border-t border-neutral-100 grid grid-cols-2 gap-2">
+                {techStack.map(({ icon: Icon, label }, idx) => (
+                  <motion.div
+                    key={label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.08 }}
+                    className="badge-glass px-3 py-2 flex items-center gap-2"
+                  >
+                    <Icon className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
+                    <span className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{label}</span>
+                  </motion.div>
+                ))}
               </div>
             </GlassCard>
           </motion.div>
         </div>
-      </section>
-    </AnimatedBackground>
-  )
-}
+      </div>
+    </section>
+
+    {/* ── CTA ── */}
+    <section className="py-20 sm:py-28">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <GlassCard hover={false} className="text-center bg-gradient-to-br from-primary-400/8 to-secondary-500/8 border-primary-200/60 p-10 sm:p-14">
+            <h2 className="display-md text-neutral-900 mb-4">Ready to Build Your Next App?</h2>
+            <p className="body-lg text-neutral-500 mb-10 max-w-xl mx-auto">
+              Join thousands of developers already using AI to accelerate their development process.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/generate" className="btn-primary body-md px-10 py-4 shadow-glow-lg">
+                <span className="relative z-10">Get Started Now</span>
+                <ArrowRight className="ml-2 h-5 w-5 relative z-10" />
+              </Link>
+              <Link to="/about" className="btn-outline body-md px-10 py-4">
+                Learn More
+              </Link>
+            </div>
+          </GlassCard>
+        </motion.div>
+      </div>
+    </section>
+  </AnimatedBackground>
+)
 
 export default Home

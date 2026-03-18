@@ -2,8 +2,8 @@
 
 _bedrock_client = None
 _e2b_service = None
-_websocket_manager = None
 _agent_orchestrator = None
+_sse_manager = None
 
 
 def get_bedrock_client():
@@ -22,12 +22,12 @@ def get_e2b_service():
     return _e2b_service
 
 
-def get_websocket_manager():
-    global _websocket_manager
-    if _websocket_manager is None:
-        from .websocket_manager import WebSocketManager
-        _websocket_manager = WebSocketManager()
-    return _websocket_manager
+def get_sse_manager():
+    global _sse_manager
+    if _sse_manager is None:
+        from .sse_manager import SSEManager
+        _sse_manager = SSEManager()
+    return _sse_manager
 
 
 def get_agent_orchestrator():
@@ -41,6 +41,6 @@ def get_agent_orchestrator():
 __all__ = [
     'get_bedrock_client',
     'get_e2b_service',
-    'get_websocket_manager',
+    'get_sse_manager',
     'get_agent_orchestrator',
 ]

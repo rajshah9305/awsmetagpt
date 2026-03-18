@@ -55,6 +55,7 @@ build/
 # MetaGPT workspace
 workspace/
 temp/
+.metagpt/
 
 # Testing
 .coverage
@@ -65,3 +66,6 @@ htmlcov/
 # Analysis
 analysis_report.json
 analyze_codebase.py
+
+# Verification screenshots (not needed in repo)
+verification/
