@@ -1,4 +1,3 @@
-import React from 'react'
 import { motion } from 'framer-motion'
 import {
   Brain, Users, Code, Cloud, Zap, ArrowRight,
@@ -9,15 +8,14 @@ import { Link } from 'react-router-dom'
 import AnimatedBackground from '../components/AnimatedBackground'
 import HeroSection from '../components/HeroSection'
 import FeatureCard from '../components/FeatureCard'
-import GlassCard from '../components/GlassCard'
 
 const features = [
-  { icon: Brain,  title: 'AI-Powered Generation',      description: 'Leverage AWS Bedrock foundation models for intelligent, context-aware application creation.' },
-  { icon: Users,  title: 'Multi-Agent Collaboration',  description: 'MetaGPT agents work together like a real dev team — each with specialized expertise.' },
-  { icon: Code,   title: 'Complete Applications',      description: 'Generate production-ready full-stack apps with documentation and tests included.' },
-  { icon: Cloud,  title: 'Cloud-Native Architecture',  description: 'Built for modern development with scalability and security baked in from the start.' },
-  { icon: Zap,    title: 'Lightning Fast',             description: 'From idea to working prototype in minutes, not weeks.' },
-  { icon: Shield, title: 'Enterprise Ready',           description: 'Security-first design with industry-standard practices and compliance considerations.' },
+  { icon: Brain,  title: 'AI-Powered Generation',     description: 'Leverage AWS Bedrock foundation models for intelligent, context-aware application creation.' },
+  { icon: Users,  title: 'Multi-Agent Collaboration', description: 'Specialized AI agents work together like a real dev team — each with domain expertise.' },
+  { icon: Code,   title: 'Complete Applications',     description: 'Generate production-ready full-stack apps with documentation and tests included.' },
+  { icon: Cloud,  title: 'Cloud-Native Architecture', description: 'Built for modern development with scalability and security baked in from the start.' },
+  { icon: Zap,    title: 'Lightning Fast',            description: 'From idea to working prototype in minutes, not weeks.' },
+  { icon: Shield, title: 'Enterprise Ready',          description: 'Security-first design with industry-standard practices and compliance considerations.' },
 ]
 
 const benefits = [
@@ -42,113 +40,97 @@ const Home = () => (
   <AnimatedBackground>
     <HeroSection />
 
-    {/* ── Features ── */}
-    <section className="py-20 sm:py-28">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    {/* Features */}
+    <section className="py-20 sm:py-28 bg-surface">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-14"
+          transition={{ duration: 0.4 }}
+          className="mb-12"
         >
-          <h2 className="display-md text-neutral-900 mb-4">Powered by Advanced AI</h2>
-          <p className="body-lg text-neutral-500 max-w-xl mx-auto">
-            Combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models
+          <p className="section-label mb-3">Capabilities</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 font-display mb-3">Powered by Advanced AI</h2>
+          <p className="text-neutral-500 max-w-xl text-base sm:text-lg">
+            Combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models.
           </p>
         </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((f, i) => (
-            <FeatureCard key={f.title} {...f} delay={i * 0.08} />
+            <FeatureCard key={f.title} {...f} delay={i * 0.06} />
           ))}
         </div>
       </div>
     </section>
 
-    {/* ── Benefits ── */}
-    <section className="py-20 sm:py-28">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-
-          {/* Left */}
+    {/* Benefits */}
+    <section className="py-20 sm:py-28 bg-white border-y border-neutral-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
           <motion.div
-            initial={{ opacity: 0, x: -40 }}
+            initial={{ opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
           >
-            <h2 className="display-md text-neutral-900 mb-5">Why Choose Our Platform?</h2>
-            <p className="body-lg text-neutral-500 mb-8">
+            <p className="section-label mb-3">Why Choose Us</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 font-display mb-5">
+              Built for Modern Development Teams
+            </h2>
+            <p className="text-neutral-500 mb-10 leading-relaxed text-base sm:text-lg">
               Experience the future of software development with AI-powered automation
-              that doesn't compromise on quality.
+              that doesn't compromise on quality or security.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {benefits.map((b, i) => (
                 <motion.div
                   key={b}
-                  initial={{ opacity: 0, x: -16 }}
+                  initial={{ opacity: 0, x: -12 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.04 }}
-                  className="flex items-start space-x-2.5"
+                  transition={{ duration: 0.3, delay: i * 0.04 }}
+                  className="flex items-center gap-2.5"
                 >
-                  <CheckCircle className="h-4 w-4 text-success-500 flex-shrink-0 mt-0.5" />
+                  <CheckCircle className="h-4 w-4 text-success-500 flex-shrink-0" />
                   <span className="text-sm text-neutral-600">{b}</span>
                 </motion.div>
               ))}
             </div>
           </motion.div>
 
-          {/* Right — demo card */}
+          {/* Demo card */}
           <motion.div
-            initial={{ opacity: 0, x: 40 }}
+            initial={{ opacity: 0, x: 24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
           >
-            <GlassCard hover={false} className="overflow-hidden">
-              {/* Agent avatars */}
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex -space-x-2.5">
-                  {[
-                    { icon: Bot,  color: 'from-primary-400 to-primary-600' },
-                    { icon: Code, color: 'from-secondary-400 to-secondary-600' },
-                    { icon: Zap,  color: 'from-accent-400 to-accent-600' },
-                  ].map((a, idx) => (
-                    <motion.div
-                      key={idx}
-                      className={`w-9 h-9 bg-gradient-to-br ${a.color} rounded-full flex items-center justify-center border-2 border-white shadow-md`}
-                      animate={{ y: [0, -4, 0] }}
-                      transition={{ duration: 2.5, delay: idx * 0.3, repeat: Infinity }}
-                    >
-                      {React.createElement(a.icon, { className: 'h-4 w-4 text-white' })}
-                    </motion.div>
-                  ))}
+            <div className="card p-7 sm:p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
+                  <span className="text-xs font-semibold text-neutral-600">Agents Collaborating</span>
                 </div>
-                <span className="badge-glass text-xs">
-                  <span className="inline-block w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5 animate-pulse" />
-                  Agents Collaborating
-                </span>
+                <span className="badge-primary">Live</span>
               </div>
 
-              <h3 className="text-lg font-semibold text-neutral-900 mb-2">Real-time Generation</h3>
-              <p className="text-sm text-neutral-500 mb-6 leading-relaxed">
-                Watch as different AI agents work together to build your application,
-                each contributing their specialized expertise in real-time.
+              <h3 className="text-base font-semibold text-neutral-900 mb-2">Real-time Generation</h3>
+              <p className="text-sm text-neutral-500 mb-7 leading-relaxed">
+                Watch AI agents work together to build your application, each contributing
+                specialized expertise in real-time.
               </p>
 
-              {/* Progress bars */}
               <div className="space-y-4">
                 {[
-                  { label: 'Architecture Design', pct: 100, done: true },
-                  { label: 'Code Generation',     pct: 75,  done: false },
-                  { label: 'Testing & QA',        pct: 45,  done: false },
-                ].map(({ label, pct, done }) => (
+                  { label: 'Architecture Design', pct: 100 },
+                  { label: 'Code Generation',     pct: 75 },
+                  { label: 'Testing & QA',        pct: 45 },
+                ].map(({ label, pct }) => (
                   <div key={label}>
-                    <div className="flex justify-between text-xs mb-1.5">
+                    <div className="flex justify-between text-xs mb-2">
                       <span className="font-medium text-neutral-700">{label}</span>
-                      <span className={done ? 'text-primary-600 font-semibold' : 'text-neutral-400'}>{pct}%</span>
+                      <span className="text-neutral-500">{pct}%</span>
                     </div>
                     <div className="progress-bar">
                       <motion.div
@@ -156,59 +138,52 @@ const Home = () => (
                         initial={{ width: 0 }}
                         whileInView={{ width: `${pct}%` }}
                         viewport={{ once: true }}
-                        transition={{ duration: 1.2, ease: 'easeOut' }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Tech badges */}
-              <div className="mt-6 pt-5 border-t border-neutral-100 grid grid-cols-2 gap-2">
-                {techStack.map(({ icon: Icon, label }, idx) => (
-                  <motion.div
-                    key={label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.08 }}
-                    className="badge-glass px-3 py-2 flex items-center gap-2"
-                  >
-                    <Icon className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
-                    <span className="text-xs font-semibold uppercase tracking-wide text-neutral-600">{label}</span>
-                  </motion.div>
+              <div className="mt-7 pt-5 border-t border-neutral-100 grid grid-cols-2 gap-2.5">
+                {techStack.map(({ icon: Icon, label }) => (
+                  <div key={label} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-neutral-50 border border-neutral-200">
+                    <Icon className="w-3.5 h-3.5 text-primary-600 flex-shrink-0" />
+                    <span className="text-xs font-medium text-neutral-600">{label}</span>
+                  </div>
                 ))}
               </div>
-            </GlassCard>
+            </div>
           </motion.div>
         </div>
       </div>
     </section>
 
-    {/* ── CTA ── */}
-    <section className="py-20 sm:py-28">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    {/* CTA */}
+    <section className="py-20 sm:py-28 bg-surface">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.4 }}
+          className="card p-10 sm:p-16 bg-primary-600 border-primary-700"
         >
-          <GlassCard hover={false} className="text-center bg-gradient-to-br from-primary-400/8 to-secondary-500/8 border-primary-200/60 p-10 sm:p-14">
-            <h2 className="display-md text-neutral-900 mb-4">Ready to Build Your Next App?</h2>
-            <p className="body-lg text-neutral-500 mb-10 max-w-xl mx-auto">
-              Join thousands of developers already using AI to accelerate their development process.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/generate" className="btn-primary body-md px-10 py-4 shadow-glow-lg">
-                <span className="relative z-10">Get Started Now</span>
-                <ArrowRight className="ml-2 h-5 w-5 relative z-10" />
-              </Link>
-              <Link to="/about" className="btn-outline body-md px-10 py-4">
-                Learn More
-              </Link>
-            </div>
-          </GlassCard>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white font-display mb-4">
+            Ready to Build Your Next App?
+          </h2>
+          <p className="text-primary-200 mb-10 max-w-md mx-auto text-base sm:text-lg">
+            Join thousands of developers already using AI to accelerate their development process.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/generate" className="inline-flex items-center justify-center px-7 py-3 rounded-lg bg-white text-primary-700 text-sm font-semibold hover:bg-primary-50 transition-colors shadow-sm">
+              Get Started Now
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link to="/about" className="inline-flex items-center justify-center px-7 py-3 rounded-lg border border-primary-400 text-white text-sm font-semibold hover:bg-primary-700 transition-colors">
+              Learn More
+            </Link>
+          </div>
         </motion.div>
       </div>
     </section>

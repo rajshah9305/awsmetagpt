@@ -4,7 +4,7 @@ Main agent orchestrator that coordinates all components
 
 import asyncio
 import uuid
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 from pathlib import Path
 

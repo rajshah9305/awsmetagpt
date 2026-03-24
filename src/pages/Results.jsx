@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { 
-  ArrowLeft, Download, CheckCircle, 
+import {
+  ArrowLeft, Download, CheckCircle,
   Clock, AlertCircle, Loader, Bot, FileText,
   FileCode, BookOpen, Settings
 } from 'lucide-react'
@@ -12,6 +12,30 @@ import { getGenerationStatus, getGenerationArtifacts } from '../services/api'
 import SSEService from '../services/sse'
 import ArtifactViewer from '../components/ArtifactViewer'
 import E2BSandboxPreview from '../components/E2BSandboxPreview'
+
+// Skeleton for loading state
+const ResultsSkeleton = () => (
+  <div className="space-y-5">
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div className="skeleton h-4 w-32" />
+        <div className="skeleton h-4 w-12" />
+      </div>
+      <div className="skeleton h-2 w-full rounded-full" />
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="card p-4 flex items-center gap-3">
+          <div className="skeleton w-8 h-8 rounded-md flex-shrink-0" />
+          <div className="flex-1 space-y-1.5">
+            <div className="skeleton h-3 w-3/4" />
+            <div className="skeleton h-3 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)
 
 const Results = () => {
   const { generationId } = useParams()
@@ -26,35 +50,20 @@ const Results = () => {
     try {
       const statusData = await getGenerationStatus(generationId)
       setStatus(statusData)
-      
       if (statusData.status === 'completed') {
         const artifactsData = await getGenerationArtifacts(generationId)
         setArtifacts(artifactsData)
-        
-        if (artifactsData.length > 0 && !selectedArtifact) {
-          setSelectedArtifact(artifactsData[0])
-        }
-        
-        if (pollingInterval) {
-          clearInterval(pollingInterval)
-          setPollingInterval(null)
-        }
+        if (artifactsData.length > 0 && !selectedArtifact) setSelectedArtifact(artifactsData[0])
+        if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null) }
       }
-    } catch (error) {
-      console.error('Error polling status:', error)
-    }
+    } catch (error) { console.error('Error polling status:', error) }
   }, [generationId, selectedArtifact, pollingInterval])
 
   useEffect(() => {
-    if (generationId) {
-      initializeResults()
-    }
-    
+    if (generationId) initializeResults()
     return () => {
       sseService.disconnect()
-      if (pollingInterval) {
-        clearInterval(pollingInterval)
-      }
+      if (pollingInterval) clearInterval(pollingInterval)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generationId])
@@ -63,21 +72,16 @@ const Results = () => {
     try {
       const statusData = await getGenerationStatus(generationId)
       setStatus(statusData)
-      
       if (statusData.status === 'completed') {
         const artifactsData = await getGenerationArtifacts(generationId)
         setArtifacts(artifactsData)
-        if (artifactsData.length > 0) {
-          setSelectedArtifact(artifactsData[0])
-        }
-      } else if (statusData.status === 'running' || statusData.status === 'started' || statusData.status === 'initializing') {
+        if (artifactsData.length > 0) setSelectedArtifact(artifactsData[0])
+      } else if (['running', 'started', 'initializing'].includes(statusData.status)) {
         await connectSSE()
         startPolling()
       }
-      
     } catch (error) {
       toast.error('Failed to load generation results')
-      console.error('Error loading results:', error)
     } finally {
       setIsLoading(false)
     }
@@ -95,49 +99,33 @@ const Results = () => {
       sseService.on('agent_update', handleAgentUpdate)
       sseService.on('artifact_update', handleArtifactUpdate)
       sseService.on('message', handleGenericMessage)
-      sseService.on('error', handleSSEError)
-      sseService.on('close', handleSSEClose)
-    } catch (error) {
-      console.error('Failed to connect SSE:', error)
-      startPolling()
-    }
+      sseService.on('error', () => { if (!pollingInterval) startPolling() })
+      sseService.on('close', () => {
+        if (status && ['running', 'started'].includes(status.status) && !pollingInterval) startPolling()
+      })
+    } catch { startPolling() }
   }
 
   const handleProgressUpdate = (data) => {
-    setStatus(prev => ({
-      ...prev,
-      status: data.status,
-      progress: data.progress,
-      message: data.message,
-      current_agent: data.current_agent,
-    }))
+    setStatus(prev => ({ ...prev, status: data.status, progress: data.progress, message: data.message, current_agent: data.current_agent }))
     if (data.status === 'completed') loadArtifacts()
   }
 
   const handleAgentUpdate = (data) => {
-    setStatus(prev => ({
-      ...prev,
-      current_agent: data.agent_role,
-      message: data.current_task || data.thinking || prev?.message
-    }))
+    setStatus(prev => ({ ...prev, current_agent: data.agent_role, message: data.current_task || data.thinking || prev?.message }))
   }
 
   const handleArtifactUpdate = (data) => {
     const artifact = data.artifact
     setArtifacts(prev => {
       const existing = prev.find(a => a.name === artifact.name)
-      if (existing) {
-        return prev.map(a => a.name === artifact.name ? { ...a, ...artifact } : a)
-      }
-      return [...prev, artifact]
+      return existing ? prev.map(a => a.name === artifact.name ? { ...a, ...artifact } : a) : [...prev, artifact]
     })
     if (!selectedArtifact && artifact) setSelectedArtifact(artifact)
   }
 
   const handleGenericMessage = (data) => {
-    if (typeof data === 'string') {
-      try { data = JSON.parse(data) } catch { return }
-    }
+    if (typeof data === 'string') { try { data = JSON.parse(data) } catch { return } }
     switch (data.type) {
       case 'progress_update': handleProgressUpdate(data); break
       case 'agent_update': handleAgentUpdate(data); break
@@ -146,26 +134,12 @@ const Results = () => {
     }
   }
 
-  const handleSSEError = () => {
-    if (!pollingInterval) startPolling()
-  }
-
-  const handleSSEClose = () => {
-    if (status && (status.status === 'running' || status.status === 'started') && !pollingInterval) {
-      startPolling()
-    }
-  }
-
   const loadArtifacts = async () => {
     try {
       const artifactsData = await getGenerationArtifacts(generationId)
       setArtifacts(artifactsData)
-      if (artifactsData.length > 0 && !selectedArtifact) {
-        setSelectedArtifact(artifactsData[0])
-      }
-    } catch (error) {
-      console.error('Failed to load artifacts:', error)
-    }
+      if (artifactsData.length > 0 && !selectedArtifact) setSelectedArtifact(artifactsData[0])
+    } catch (error) { console.error('Failed to load artifacts:', error) }
   }
 
   const getArtifactIcon = (artifact) => {
@@ -177,123 +151,146 @@ const Results = () => {
     return FileText
   }
 
+  const getStatusBadge = (s) => {
+    const map = {
+      completed:    'badge-success',
+      running:      'badge-primary',
+      started:      'badge-primary',
+      initializing: 'badge-primary',
+      failed:       'badge-error',
+    }
+    return map[s] || 'badge-neutral'
+  }
+
   const getStatusIcon = (s) => {
     switch (s) {
-      case 'completed': return <CheckCircle className="h-5 w-5 text-success-600" />
+      case 'completed':    return <CheckCircle className="h-3.5 w-3.5" />
       case 'running':
       case 'started':
-      case 'initializing': return <Loader className="h-5 w-5 text-primary-600 animate-spin" />
-      case 'failed': return <AlertCircle className="h-5 w-5 text-error-600" />
-      default: return <Clock className="h-5 w-5 text-neutral-500" />
+      case 'initializing': return <Loader className="h-3.5 w-3.5 animate-spin" />
+      case 'failed':       return <AlertCircle className="h-3.5 w-3.5" />
+      default:             return <Clock className="h-3.5 w-3.5" />
     }
   }
 
-  const getStatusColor = (s) => {
-    switch (s) {
-      case 'completed': return 'text-success-600 bg-success-50 border-success-200'
-      case 'running':
-      case 'started':
-      case 'initializing': return 'text-primary-600 bg-primary-50 border-primary-200'
-      case 'failed': return 'text-error-600 bg-error-50 border-error-200'
-      default: return 'text-neutral-600 bg-neutral-100 border-neutral-200'
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center mesh-gradient">
-        <div className="text-center px-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-glow">
-            <Loader className="h-7 w-7 text-white animate-spin" />
+  if (isLoading) return (
+    <div className="min-h-screen bg-surface">
+      <div className="bg-white border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex items-center gap-3">
+            <div className="skeleton h-4 w-12" />
+            <div className="skeleton h-4 w-px" />
+            <div className="skeleton h-4 w-48" />
           </div>
-          <p className="text-sm text-neutral-500">Loading generation results...</p>
         </div>
       </div>
-    )
-  }
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <ResultsSkeleton />
+      </div>
+    </div>
+  )
 
-  // In-progress view
-  if (status && (status.status === 'running' || status.status === 'started' || status.status === 'initializing')) {
-    return (
-      <div className="min-h-screen py-8 sm:py-12 mesh-gradient">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6 sm:mb-8">
-            <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 group">
-              <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-              Back to Generator
-            </Link>
+  const isRunning = status && ['running', 'started', 'initializing'].includes(status.status)
 
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+  return (
+    <div className="min-h-screen bg-surface">
+      {/* Page header */}
+      <div className="bg-white border-b border-neutral-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <Link
+                to="/generate"
+                className="flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-900 transition-colors flex-shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back</span>
+              </Link>
+              <span className="text-neutral-300 hidden sm:inline">|</span>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-display font-bold text-neutral-900">AI Agents at Work</h1>
-                <p className="body-sm text-neutral-500 mt-1 font-mono truncate">ID: {generationId}</p>
-              </div>
-              <div className="flex items-center space-x-3 flex-shrink-0">
-                <div className="flex items-center space-x-2 badge-glass px-3 py-1.5">
-                  <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-                  <span className="caption text-neutral-700 font-semibold">Live</span>
-                </div>
-                <div className="badge-primary">
-                  {Math.round(status.progress || 0)}% Complete
-                </div>
+                <h1 className="text-sm font-semibold text-neutral-900 truncate">
+                  {isRunning ? 'Generation in Progress' : 'Generation Results'}
+                </h1>
+                <p className="text-xs text-neutral-400 font-mono truncate hidden sm:block">ID: {generationId}</p>
               </div>
             </div>
-          </div>
-
-          {/* Progress */}
-          <div className="glass-card p-4 sm:p-6 mb-6 sm:mb-8">
-            <div className="flex justify-between body-sm mb-3">
-              <span className="text-neutral-700 font-medium truncate mr-4">
-                {status.current_agent
-                  ? `Agent: ${status.current_agent.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`
-                  : 'Processing...'}
-              </span>
-              <span className="text-primary-600 font-semibold flex-shrink-0">{Math.round(status.progress || 0)}%</span>
-            </div>
-            <div className="progress-bar mb-3">
-              <motion.div
-                className="progress-fill"
-                initial={{ width: 0 }}
-                animate={{ width: `${status.progress || 0}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-              />
-            </div>
-            {status.message && (
-              <p className="body-sm text-neutral-600 text-center line-clamp-2">{status.message}</p>
+            {status && (
+              <div className={`${getStatusBadge(status.status)} flex items-center gap-1.5 flex-shrink-0`}>
+                {getStatusIcon(status.status)}
+                <span className="capitalize">{status.status}</span>
+              </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Artifacts appearing in real-time */}
-          {artifacts.length > 0 && (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        {/* Progress bar when running */}
+        <AnimatePresence>
+          {isRunning && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
+              exit={{ opacity: 0, y: -8 }}
+              className="card p-5 sm:p-6 mb-6"
             >
-              <h2 className="body-xl font-semibold text-neutral-900 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+                  <span className="text-sm font-medium text-neutral-700">
+                    {status.current_agent
+                      ? status.current_agent.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                      : 'Processing...'}
+                  </span>
+                </div>
+                <span className="text-sm font-semibold text-primary-600 tabular-nums">
+                  {Math.round(status.progress || 0)}%
+                </span>
+              </div>
+              <div className="progress-bar mb-3">
+                <motion.div
+                  className="progress-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${status.progress || 0}%` }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                />
+              </div>
+              {status.message && (
+                <p className="text-xs text-neutral-500 leading-relaxed">{status.message}</p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Artifacts appearing in real-time */}
+        <AnimatePresence>
+          {isRunning && artifacts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6"
+            >
+              <h2 className="text-sm font-semibold text-neutral-700 mb-3">
                 Generated Files ({artifacts.length})
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {artifacts.map((artifact, index) => {
                   const Icon = getArtifactIcon(artifact)
                   return (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, scale: 0.9 }}
+                      initial={{ opacity: 0, scale: 0.97 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="glass-card p-4"
+                      transition={{ delay: index * 0.04 }}
+                      className="card p-4 flex items-center gap-3"
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Icon className="h-5 w-5 text-primary-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="label text-neutral-900 truncate">{artifact.name}</p>
-                          <p className="caption text-neutral-500">
-                            {artifact.agent_role?.replace(/_/g, ' ')}
-                          </p>
-                        </div>
+                      <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Icon className="h-4 w-4 text-primary-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-neutral-900 truncate">{artifact.name}</p>
+                        <p className="text-xs text-neutral-400">{artifact.agent_role?.replace(/_/g, ' ')}</p>
                       </div>
                     </motion.div>
                   )
@@ -301,126 +298,101 @@ const Results = () => {
               </div>
             </motion.div>
           )}
+        </AnimatePresence>
 
-          <E2BSandboxPreview artifacts={artifacts} generationId={generationId} />
-        </div>
-      </div>
-    )
-  }
+        {isRunning && <E2BSandboxPreview artifacts={artifacts} generationId={generationId} />}
 
-  return (
-    <div className="min-h-screen py-8 sm:py-12 mesh-gradient">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <Link to="/generate" className="inline-flex items-center text-neutral-600 hover:text-neutral-900 mb-4 sm:mb-6 group">
-            <ArrowLeft className="h-4 w-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-            Back to Generator
-          </Link>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-display font-bold text-neutral-900">Generation Results</h1>
-              <p className="body-sm text-neutral-500 mt-1 font-mono truncate">ID: {generationId}</p>
-            </div>
-
-            {status && (
-              <div className={`inline-flex items-center self-start sm:self-auto px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border flex-shrink-0 ${getStatusColor(status.status)}`}>
-                {getStatusIcon(status.status)}
-                <span className="ml-2 caption font-semibold capitalize">{status.status}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Main Content */}
-        {artifacts.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* E2B Live Preview */}
+        {/* Completed view */}
+        {!isRunning && artifacts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
             <div className="lg:col-span-2">
               <E2BSandboxPreview artifacts={artifacts} generationId={generationId} />
             </div>
-
-            {/* Artifacts Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="glass-card p-6">
-                <h2 className="body-xl font-semibold text-neutral-900 mb-4">
-                  Generated Files ({artifacts.length})
-                </h2>
-                <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+            <div className="space-y-5">
+              <div className="card p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-sm font-semibold text-neutral-900">Generated Files</h2>
+                  <span className="badge-neutral">{artifacts.length}</span>
+                </div>
+                <div className="space-y-1.5 max-h-72 overflow-y-auto custom-scrollbar pr-1">
                   {artifacts.map((artifact, index) => {
                     const Icon = getArtifactIcon(artifact)
                     const isSelected = selectedArtifact?.name === artifact.name
                     return (
-                      <motion.button
+                      <button
                         key={index}
                         onClick={() => setSelectedArtifact(artifact)}
-                        whileHover={{ x: 2 }}
-                        className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                        className={`w-full text-left p-3 rounded-xl border transition-all duration-150 ${
                           isSelected
-                            ? 'border-primary-400 bg-primary-50'
-                            : 'border-neutral-200 hover:border-primary-300 hover:bg-neutral-50'
+                            ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
+                            : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
                         }`}
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                            isSelected ? 'bg-primary-100' : 'bg-neutral-100'
-                          }`}>
-                            <Icon className={`h-4 w-4 ${isSelected ? 'text-primary-600' : 'text-neutral-500'}`} />
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-primary-100' : 'bg-neutral-100'}`}>
+                            <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-primary-600' : 'text-neutral-500'}`} />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`label truncate ${isSelected ? 'text-primary-900' : 'text-neutral-900'}`}>
+                          <div className="min-w-0">
+                            <p className={`text-xs font-medium truncate ${isSelected ? 'text-primary-900' : 'text-neutral-900'}`}>
                               {artifact.name}
                             </p>
-                            <p className="caption text-neutral-500">
-                              {artifact.agent_role?.replace(/_/g, ' ')}
-                            </p>
+                            <p className="text-xs text-neutral-400">{artifact.agent_role?.replace(/_/g, ' ')}</p>
                           </div>
                         </div>
-                      </motion.button>
+                      </button>
                     )
                   })}
                 </div>
-
-                <div className="mt-4 pt-4 border-t border-neutral-200">
-                  <button className="btn-outline w-full">
-                    <Download className="h-4 w-4 mr-2" />
+                <div className="mt-5 pt-4 border-t border-neutral-100">
+                  <button className="btn-secondary w-full text-sm">
+                    <Download className="h-3.5 w-3.5 mr-2" />
                     Download All
                   </button>
                 </div>
               </div>
 
-              {/* Selected Artifact Viewer */}
-              {selectedArtifact && (
-                <motion.div
-                  key={selectedArtifact.name}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <ArtifactViewer artifact={selectedArtifact} />
-                </motion.div>
-              )}
+              <AnimatePresence mode="wait">
+                {selectedArtifact && (
+                  <motion.div
+                    key={selectedArtifact.name}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ArtifactViewer artifact={selectedArtifact} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        ) : (
-          /* Empty State */
-          <div className="glass-card text-center py-16">
-            <div className="w-20 h-20 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Bot className="h-10 w-10 text-neutral-400" />
+          </motion.div>
+        )}
+
+        {/* Empty state */}
+        {!isRunning && artifacts.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card p-14 sm:p-20 text-center"
+          >
+            <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <Bot className="h-8 w-8 text-neutral-400" />
             </div>
-            <h3 className="body-xl font-semibold text-neutral-900 mb-2">
-              No Artifacts Generated Yet
-            </h3>
-            <p className="body-md text-neutral-600 mb-8">
+            <h3 className="text-base font-semibold text-neutral-900 mb-2">No Artifacts Yet</h3>
+            <p className="text-sm text-neutral-500 mb-8 max-w-xs mx-auto leading-relaxed">
               {status?.status === 'failed'
                 ? 'The generation process encountered an error.'
-                : 'Artifacts will appear here once the generation is complete.'
-              }
+                : 'Artifacts will appear here once generation is complete.'}
             </p>
-            <Link to="/generate" className="btn-primary">
+            <Link to="/generate" className="btn-primary text-sm">
               Start New Generation
             </Link>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

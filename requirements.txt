@@ -11,8 +11,8 @@ python-dotenv>=1.0.0
 boto3>=1.35.0
 botocore>=1.35.0
 
-# MetaGPT - installed without deps to avoid faiss-cpu==1.7.4 conflict
-# Run: pip install metagpt==0.8.1 --no-deps
+# MetaGPT - install without deps to avoid faiss-cpu==1.7.4 conflict:
+#   pip install metagpt==0.8.1 --no-deps
 # Then install these compatible replacements manually:
 pydantic>=2.6.4
 PyYAML>=6.0.1

@@ -4,7 +4,7 @@ API middleware for validation, rate limiting, and error handling
 
 import time
 from typing import Dict, Any, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
 
@@ -138,7 +138,19 @@ class ErrorHandler:
         """Create standardized error response"""
         
         # Handle custom exceptions
-        if isinstance(error, MetaGPTSystemException):
+        if isinstance(error, RateLimitException):
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    'error': 'RateLimitExceeded',
+                    'message': error.message,
+                    'timestamp': datetime.now().isoformat(),
+                    'request_id': request_id
+                }
+            )
+
+        # Handle MetaGPT system exceptions
+        elif isinstance(error, MetaGPTSystemException):
             return JSONResponse(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 content={
@@ -149,19 +161,7 @@ class ErrorHandler:
                     'request_id': request_id
                 }
             )
-        
-        # Handle rate limit exceptions
-        elif isinstance(error, RateLimitException):
-            return JSONResponse(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                content={
-                    'error': 'RateLimitExceeded',
-                    'message': error.message,
-                    'timestamp': datetime.now().isoformat(),
-                    'request_id': request_id
-                }
-            )
-        
+
         # Handle HTTP exceptions
         elif isinstance(error, HTTPException):
             return JSONResponse(

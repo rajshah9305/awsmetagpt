@@ -23,9 +23,14 @@ def test_get_models():
     data = response.json()
     assert "models" in data
     assert len(data["models"]) > 0
-    # Check if our fallback models or enum models are present
+    # Verify each model has required fields
+    for model in data["models"]:
+        assert "id" in model
+        assert "name" in model
+        assert "provider" in model
+    # Check at least one known model is present
     model_ids = [m["id"] for m in data["models"]]
-    assert "us.amazon.nova-pro-v1:0" in model_ids or "us.anthropic.claude-sonnet-4-20250514-v1:0" in model_ids
+    assert any("anthropic" in mid or "meta" in mid or "mistral" in mid for mid in model_ids)
 
 def test_get_agent_roles():
     response = client.get("/api/v1/agents/roles")

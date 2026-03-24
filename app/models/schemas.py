@@ -75,7 +75,7 @@ class GenerationRequest(BaseModel):
     tech_stack_preferences: Optional[List[str]] = Field(
         None, 
         description="Preferred technologies/frameworks",
-        max_items=10
+        max_length=10
     )
     priority: Priority = Field(
         default=Priority.NORMAL,
@@ -205,13 +205,6 @@ class ErrorResponse(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     request_id: Optional[str] = None
 
-class WebSocketMessage(BaseModel):
-    """WebSocket message model"""
-    type: str
-    data: Dict[str, Any]
-    timestamp: datetime = Field(default_factory=datetime.now)
-    client_id: Optional[str] = None
-
 # Request/Response models for specific endpoints
 
 class CreateSandboxRequest(BaseModel):
@@ -222,7 +215,7 @@ class CreateSandboxRequest(BaseModel):
 
 class WriteFilesRequest(BaseModel):
     """Request to write files to sandbox"""
-    artifacts: List[Dict[str, Any]] = Field(..., min_items=1, max_items=200)
+    artifacts: List[Dict[str, Any]] = Field(..., min_length=1, max_length=200)
     overwrite: bool = Field(default=True, description="Overwrite existing files")
 
 class RunApplicationRequest(BaseModel):
@@ -252,7 +245,7 @@ class AgentConfig(BaseModel):
 class GenerationConfig(BaseModel):
     """Generation configuration model"""
     agents: List[AgentConfig]
-    model: BedrockModel = BedrockModel.CLAUDE_SONNET_4
+    model: BedrockModel = BedrockModel.CLAUDE_35_SONNET
     timeout_minutes: int = Field(default=30, ge=5, le=120)
     max_artifacts: int = Field(default=100, ge=1, le=500)
     enable_e2b: bool = True

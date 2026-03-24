@@ -3,7 +3,6 @@ Agent state management and lifecycle
 """
 
 from typing import Dict, List, Optional
-import asyncio
 from datetime import datetime, timedelta
 
 from app.core.logging import get_logger

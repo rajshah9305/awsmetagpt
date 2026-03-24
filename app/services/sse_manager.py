@@ -7,7 +7,6 @@ import asyncio
 import json
 from typing import Dict, Any, Optional, AsyncGenerator
 from datetime import datetime
-from collections import defaultdict
 
 from app.core.logging import get_logger
 

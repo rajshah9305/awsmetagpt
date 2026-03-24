@@ -105,8 +105,8 @@ const SandboxController = ({ generationId, artifacts, onStatusChange }) => {
   const statusConfig = {
     idle: { label: 'Not created', color: 'text-neutral-500', bg: 'bg-neutral-100' },
     creating: { label: 'Creating...', color: 'text-primary-600', bg: 'bg-primary-50' },
-    ready: { label: 'Ready', color: 'text-secondary-600', bg: 'bg-secondary-50' },
-    files_ready: { label: 'Files written', color: 'text-secondary-600', bg: 'bg-secondary-50' },
+    ready: { label: 'Ready', color: 'text-accent-600', bg: 'bg-accent-50' },
+    files_ready: { label: 'Files written', color: 'text-accent-600', bg: 'bg-accent-50' },
     running: { label: 'Running', color: 'text-success-600', bg: 'bg-success-50' },
     stopped: { label: 'Stopped', color: 'text-neutral-600', bg: 'bg-neutral-100' },
     error: { label: 'Error', color: 'text-error-600', bg: 'bg-error-50' },

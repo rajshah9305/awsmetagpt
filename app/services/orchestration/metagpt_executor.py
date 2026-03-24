@@ -111,8 +111,11 @@ class MetaGPTExecutor:
         
         try:
             # Update model if different from current
-            if request.preferred_model != BedrockModel(settings.BEDROCK_MODEL):
-                self.update_model(request.preferred_model)
+            try:
+                if request.preferred_model != BedrockModel(settings.BEDROCK_MODEL):
+                    self.update_model(request.preferred_model)
+            except ValueError:
+                pass  # BEDROCK_MODEL env var doesn't match enum; proceed with request model
             
             # Import MetaGPT (lazy import to avoid startup issues)
             from metagpt.software_company import SoftwareCompany

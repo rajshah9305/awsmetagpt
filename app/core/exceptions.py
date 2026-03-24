@@ -64,11 +64,6 @@ class TaskException(OrchestrationException):
     pass
 
 
-class WebSocketException(MetaGPTSystemException):
-    """WebSocket communication errors"""
-    pass
-
-
 class RateLimitException(MetaGPTSystemException):
     """Rate limiting errors"""
     pass

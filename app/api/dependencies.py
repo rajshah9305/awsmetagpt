@@ -3,17 +3,11 @@ API dependencies for dependency injection
 """
 
 import uuid
-from typing import TYPE_CHECKING
 from fastapi import Request, HTTPException, Depends, status
 
 from app.core.config import settings
 from app.core.exceptions import RateLimitException
 from .middleware import rate_limiter, request_validator
-
-if TYPE_CHECKING:
-    from app.services.orchestration import AgentOrchestrator
-    from app.services.e2b_service import E2BService
-    from app.services.bedrock_client import BedrockClient
 
 
 def get_client_ip(request: Request) -> str:

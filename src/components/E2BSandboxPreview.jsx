@@ -99,7 +99,7 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
               whileTap={{ scale: 0.98 }}
               className={`flex-1 inline-flex items-center justify-center py-2.5 px-4 rounded-xl body-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? 'bg-gradient-to-r from-primary-400 to-secondary-500 text-white shadow-glow'
+                  ? 'bg-gradient-to-r from-primary-400 to-accent-500 text-white shadow-glow'
                   : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
               }`}
             >
@@ -126,7 +126,7 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card-primary p-4"
+          className="card p-4 border-success-200 bg-success-50"
         >
           <div className="flex items-center">
             <div className="w-3 h-3 bg-success-500 rounded-full mr-3 animate-pulse" />

@@ -8,14 +8,13 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from app.models.schemas import (
-    GenerationRequest, GenerationResponse, HealthCheck, 
+    GenerationRequest, GenerationResponse, HealthCheck,
     GeneratedArtifact, SessionStatus
 )
 from app.core.exceptions import MetaGPTSystemException
 from app.core.logging import get_logger
 from app.core.config import settings
 from .dependencies import get_validated_request, get_services, check_system_health
-from .middleware import error_handler
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -337,7 +336,7 @@ async def health_check(services: dict = Depends(get_services)):
             },
             capacity={
                 "active_sessions": orchestrator_stats.get('status_distribution', {}).get('running', 0),
-                "max_sessions": 10,  # Default value since we simplified settings
+                "max_sessions": settings.MAX_CONCURRENT_SESSIONS,
                 "active_sandboxes": e2b_stats.get('total_sandboxes', 0)
             }
         )
