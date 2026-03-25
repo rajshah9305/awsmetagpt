@@ -11,15 +11,47 @@ python-dotenv>=1.0.0
 boto3>=1.35.0
 botocore>=1.35.0
 
-# MetaGPT - install without deps to avoid faiss-cpu==1.7.4 conflict:
-#   pip install metagpt==0.8.1 --no-deps
-# Then install these compatible replacements manually:
+# MetaGPT and dependencies (installed with --no-deps to avoid strict version pin conflicts on Python 3.12)
+metagpt==0.8.1
+
+# Core MetaGPT sub-dependencies with versions compatible with Python 3.12 and MetaGPT
+faiss-cpu>=1.7.4
+aioredis~=2.0.1
+anytree
+channels==4.0.0
+dashscope==1.14.1
+gitignore-parser==0.1.9
+gitpython==3.1.40
+google-generativeai==0.4.1
+imap-tools==1.5.0
+ipykernel==6.27.1
+ipython==8.17.2
+ipywidgets==8.1.1
+jieba==0.42.1
+lancedb==0.4.0
+meilisearch==0.21.0
+nbclient==0.9.0
+nbformat==5.9.2
+networkx~=3.2.1
+Pillow
+python-docx==0.8.11
+qdrant-client==1.7.0
+qianfan==0.3.2
+rank-bm25==0.2.2
+scikit-learn==1.3.2
+semantic-kernel==0.4.3.dev0
+socksio~=1.0.0
+ta==0.10.2
+websockets~=11.0
+zhipuai==2.0.1
+
+# Core shared deps (refined for compatibility)
 pydantic>=2.6.4
 PyYAML>=6.0.1
 tenacity>=8.2.3
 tiktoken>=0.6.0
 tqdm>=4.66.2
-aiohttp>=3.9.0
+aiohttp>=3.8.6
 aiofiles==23.2.1
 loguru>=0.6.0
 openai>=1.6.1

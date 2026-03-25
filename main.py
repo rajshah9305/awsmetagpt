@@ -10,8 +10,10 @@ if sys.version_info < (3, 11):
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime
+import os
 from dotenv import load_dotenv
 
 from app.api.routes import router as api_router
@@ -42,6 +44,10 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api/v1")
 
+# Serve static files from the frontend build directory
+if os.path.exists("dist"):
+    if os.path.exists("dist/assets"):
+        app.mount("/assets", StaticFiles(directory="dist/assets"), name="assets")
 
 @app.get("/health")
 async def health_check():
@@ -63,6 +69,26 @@ async def global_exception_handler(request: Request, exc: Exception):
 async def metagpt_exception_handler(request: Request, exc: MetaGPTSystemException):
     return error_handler.create_error_response(exc)
 
+# Catch-all route to serve the frontend SPA
+@app.get("/{full_path:path}")
+async def serve_spa(request: Request, full_path: str):
+    # For paths that should be handled by other routes but weren't (e.g. invalid API calls)
+    # return a 404 instead of serving index.html
+    if full_path.startswith("api/") or full_path.startswith("docs") or \
+       full_path.startswith("redoc") or full_path == "health":
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Not Found", "message": f"API endpoint {full_path} not found"}
+        )
+
+    index_path = os.path.join("dist", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+
+    return JSONResponse(
+        status_code=404,
+        content={"error": "Not Found", "message": f"Path {full_path} not found and frontend not built"}
+    )
 
 if __name__ == "__main__":
     import uvicorn
