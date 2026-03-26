@@ -38,14 +38,19 @@ api.interceptors.response.use(
       if (data?.detail) {
         // FastAPI validation error format
         if (Array.isArray(data.detail)) {
-          message = data.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join(', ')
+          message = data.detail.map(err => {
+            const loc = Array.isArray(err.loc) ? err.loc.join('.') : (err.loc || 'unknown');
+            return `${loc}: ${err.msg}`;
+          }).join(', ')
+        } else if (typeof data.detail === 'object') {
+          message = JSON.stringify(data.detail)
         } else {
-          message = data.detail
+          message = String(data.detail)
         }
       } else if (data?.message) {
-        message = data.message
+        message = typeof data.message === 'object' ? JSON.stringify(data.message) : String(data.message)
       } else if (data?.error) {
-        message = data.error
+        message = typeof data.error === 'object' ? JSON.stringify(data.error) : String(data.error)
       } else {
         message = `Server error: ${error.response.status}`
       }

@@ -89,7 +89,7 @@ const Generator = () => {
         active_agents:   fetchedRoles.map(r => r.id),
       }))
     } catch (err) {
-      setLoadError(err?.message || 'Failed to load configuration from server')
+      setLoadError(String(err?.message || err || 'Failed to load configuration from server'))
     } finally {
       setIsLoadingData(false)
     }
@@ -114,7 +114,7 @@ const Generator = () => {
       toast.success('Generation started')
       navigate(`/results/${response.generation_id}`)
     } catch (err) {
-      toast.error(err.message || 'Failed to start generation')
+      toast.error(String(err.message || err || 'Failed to start generation'))
     } finally {
       setIsSubmitting(false)
     }
