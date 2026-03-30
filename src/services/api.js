@@ -35,17 +35,23 @@ api.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const data = error.response.data
-      if (data?.detail) {
-        // FastAPI validation error format
-        if (Array.isArray(data.detail)) {
-          message = data.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join(', ')
+      if (data && typeof data === 'object') {
+        if (data.detail) {
+          // FastAPI validation error format
+          if (Array.isArray(data.detail)) {
+            message = data.detail.map(err => `${err.loc?.join('.')}: ${err.msg}`).join(', ')
+          } else {
+            message = String(data.detail)
+          }
+        } else if (data.message) {
+          message = String(data.message)
+        } else if (data.error) {
+          message = String(data.error)
         } else {
-          message = data.detail
+          message = `Server error: ${error.response.status}`
         }
-      } else if (data?.message) {
-        message = data.message
-      } else if (data?.error) {
-        message = data.error
+      } else if (typeof data === 'string' && data.length < 200) {
+        message = data
       } else {
         message = `Server error: ${error.response.status}`
       }

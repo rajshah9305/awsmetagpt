@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import {
   Bot, Zap, Settings, Play, Loader,
   Users, Code, Database, TestTube, Cloud, Briefcase,
-  ChevronDown, AlertCircle, Cpu, Sparkles
+  ChevronDown, AlertCircle, Cpu, Sparkles, RefreshCcw
 } from 'lucide-react'
 
 import { generateApp, getModels, getAgentRoles } from '../services/api'
@@ -28,24 +28,23 @@ const APP_TYPES = [
 ]
 
 const SectionHeader = ({ step, title, description }) => (
-  <div className="mb-6">
-    <div className="flex items-center gap-3 mb-1.5">
-      <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+  <div className="mb-7">
+    <div className="flex items-center gap-3 mb-2">
+      <span className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 shadow-sm">
         {step}
       </span>
       <h2 className="text-sm font-semibold text-neutral-900">{title}</h2>
     </div>
-    {description && <p className="text-xs text-neutral-500 ml-9 leading-relaxed">{description}</p>}
+    {description && <p className="text-xs text-neutral-400 ml-9 leading-relaxed">{description}</p>}
   </div>
 )
 
-// Skeleton for loading state
 const FormSkeleton = () => (
-  <div className="space-y-4">
+  <div className="space-y-5">
     {[1, 2, 3, 4].map(i => (
-      <div key={i} className="card p-6">
-        <div className="skeleton h-4 w-32 mb-6" />
-        <div className="skeleton h-24 w-full rounded-lg" />
+      <div key={i} className="card p-7">
+        <div className="skeleton h-4 w-36 mb-7" />
+        <div className="skeleton h-28 w-full rounded-xl" />
       </div>
     ))}
   </div>
@@ -85,11 +84,14 @@ const Generator = () => {
       setAgentRoles(fetchedRoles)
       setFormData(prev => ({
         ...prev,
-        preferred_model: fetchedModels[0].id,
+        preferred_model: fetchedModels[0]?.id ?? '',
         active_agents:   fetchedRoles.map(r => r.id),
       }))
     } catch (err) {
-      setLoadError(err?.message || 'Failed to load configuration from server')
+      const msg = typeof err === 'string'
+        ? err
+        : err?.message || err?.detail || 'Failed to load configuration from server'
+      setLoadError(typeof msg === 'string' ? msg : 'Failed to load configuration from server')
     } finally {
       setIsLoadingData(false)
     }
@@ -122,18 +124,18 @@ const Generator = () => {
 
   if (isLoadingData) return (
     <div className="min-h-screen bg-surface">
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-3">
-            <div className="skeleton w-9 h-9 rounded-lg" />
-            <div className="space-y-1.5">
-              <div className="skeleton h-4 w-40" />
+      <div className="bg-white border-b border-neutral-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="flex items-center gap-4">
+            <div className="skeleton w-11 h-11 rounded-2xl" />
+            <div className="space-y-2">
+              <div className="skeleton h-4 w-44" />
               <div className="skeleton h-3 w-64" />
             </div>
           </div>
         </div>
       </div>
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <FormSkeleton />
       </div>
     </div>
@@ -144,14 +146,17 @@ const Generator = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="card p-10 max-w-sm w-full text-center"
+        className="card p-12 max-w-sm w-full text-center shadow-elevation-2"
       >
-        <div className="w-12 h-12 bg-error-50 rounded-xl flex items-center justify-center mx-auto mb-5">
-          <AlertCircle className="h-6 w-6 text-error-500" />
+        <div className="w-14 h-14 bg-error-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <AlertCircle className="h-7 w-7 text-error-500" />
         </div>
-        <h2 className="text-base font-semibold text-neutral-900 mb-2">Could not load configuration</h2>
-        <p className="text-sm text-neutral-500 mb-6 leading-relaxed">{loadError}</p>
-        <button onClick={loadInitialData} className="btn-primary w-full justify-center">Retry</button>
+        <h2 className="text-base font-semibold text-neutral-900 mb-2.5">Could not load configuration</h2>
+        <p className="text-sm text-neutral-500 mb-8 leading-relaxed">{String(loadError)}</p>
+        <button onClick={loadInitialData} className="btn-primary w-full justify-center gap-2">
+          <RefreshCcw className="h-4 w-4" />
+          Retry
+        </button>
       </motion.div>
     </div>
   )
@@ -165,31 +170,31 @@ const Generator = () => {
   return (
     <div className="min-h-screen bg-surface">
       {/* Page header */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="bg-white border-b border-neutral-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
             className="flex items-center gap-4"
           >
-            <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center flex-shrink-0 shadow-sm">
               <Cpu className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-neutral-900 font-display leading-tight">Generate Application</h1>
-              <p className="text-sm text-neutral-500 mt-0.5">Configure your AI agents and describe what you want to build</p>
+              <p className="text-sm text-neutral-400 mt-0.5">Configure your AI agents and describe what you want to build</p>
             </div>
           </motion.div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
         <form onSubmit={handleSubmit} className="space-y-5">
 
           {/* Step 1 — Description */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-            <div className="card p-6 sm:p-7">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+            <div className="card p-7 sm:p-8">
               <SectionHeader
                 step="1"
                 title="Describe Your Application"
@@ -202,14 +207,14 @@ const Generator = () => {
                 className="input w-full h-36 resize-none"
                 required
               />
-              <div className="flex items-center justify-between mt-2.5">
+              <div className="flex items-center justify-between mt-3">
                 <p className="text-xs text-neutral-400">
                   {formData.requirement.length > 0
                     ? `${formData.requirement.length} characters`
                     : 'Describe your app in detail for best results'}
                 </p>
                 {formData.requirement.length > 100 && (
-                  <span className="text-xs text-success-600 font-medium flex items-center gap-1">
+                  <span className="text-xs text-success-600 font-medium flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3" /> Good detail
                   </span>
                 )}
@@ -218,23 +223,23 @@ const Generator = () => {
           </motion.div>
 
           {/* Step 2 — App Type */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <div className="card p-6 sm:p-7">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <div className="card p-7 sm:p-8">
               <SectionHeader step="2" title="Application Type" />
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {APP_TYPES.map(({ id, label, icon: Icon }) => {
                   const sel = formData.app_type === id
                   return (
                     <button
                       key={id} type="button"
                       onClick={() => setFormData(p => ({ ...p, app_type: id }))}
-                      className={`p-3.5 rounded-xl border text-center transition-all duration-150 ${
+                      className={`p-4 rounded-2xl border text-center transition-all duration-150 ${
                         sel
-                          ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
+                          ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-400 shadow-sm'
                           : 'border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50'
                       }`}
                     >
-                      <Icon className={`h-5 w-5 mx-auto mb-2 ${sel ? 'text-primary-600' : 'text-neutral-400'}`} />
+                      <Icon className={`h-5 w-5 mx-auto mb-2.5 ${sel ? 'text-primary-600' : 'text-neutral-400'}`} />
                       <div className={`text-xs font-medium leading-tight ${sel ? 'text-primary-700' : 'text-neutral-600'}`}>
                         {label}
                       </div>
@@ -246,23 +251,23 @@ const Generator = () => {
           </motion.div>
 
           {/* Step 3 — AI Model */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <div className="card p-6 sm:p-7">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <div className="card p-7 sm:p-8">
               <SectionHeader step="3" title="AI Model" description="Select the foundation model to power your generation." />
-              <div className="space-y-5">
+              <div className="space-y-6">
                 {Object.entries(modelsByProvider).map(([provider, pModels]) => (
                   <div key={provider}>
-                    <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2.5">{provider}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-3">{provider}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {pModels.map(model => {
                         const sel = formData.preferred_model === model.id
                         return (
                           <button
                             key={model.id} type="button"
                             onClick={() => setFormData(p => ({ ...p, preferred_model: model.id }))}
-                            className={`p-3.5 rounded-xl border text-left transition-all duration-150 ${
+                            className={`p-4 rounded-2xl border text-left transition-all duration-150 ${
                               sel
-                                ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
+                                ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-400 shadow-sm'
                                 : 'border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50'
                             }`}
                           >
@@ -287,9 +292,9 @@ const Generator = () => {
           </motion.div>
 
           {/* Step 4 — Agents */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <div className="card p-6 sm:p-7">
-              <div className="flex items-start justify-between mb-6">
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div className="card p-7 sm:p-8">
+              <div className="flex items-start justify-between mb-7">
                 <SectionHeader step="4" title="AI Agent Team" description="Select which agents collaborate on your project." />
                 <button
                   type="button"
@@ -302,7 +307,7 @@ const Generator = () => {
                   {formData.active_agents.length === agentRoles.length ? 'Deselect all' : 'Select all'}
                 </button>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {agentRoles.map(role => {
                   const Icon = AGENT_ICONS[role.id] ?? Bot
                   const sel  = formData.active_agents.includes(role.id)
@@ -310,14 +315,14 @@ const Generator = () => {
                     <button
                       key={role.id} type="button"
                       onClick={() => toggleAgent(role.id)}
-                      className={`p-4 rounded-xl border text-left transition-all duration-150 ${
+                      className={`p-4 rounded-2xl border text-left transition-all duration-150 ${
                         sel
-                          ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
+                          ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-400 shadow-sm'
                           : 'border-neutral-200 hover:border-neutral-300 bg-white hover:bg-neutral-50'
                       }`}
                     >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${sel ? 'bg-primary-100' : 'bg-neutral-100'}`}>
+                      <div className="flex items-center gap-3 mb-2.5">
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${sel ? 'bg-primary-100' : 'bg-neutral-100'}`}>
                           <Icon className={`h-4 w-4 ${sel ? 'text-primary-600' : 'text-neutral-500'}`} />
                         </div>
                         <span className={`text-sm font-semibold ${sel ? 'text-primary-900' : 'text-neutral-900'}`}>{role.name}</span>
@@ -327,19 +332,19 @@ const Generator = () => {
                   )
                 })}
               </div>
-              <p className="text-xs text-neutral-400 mt-4">
+              <p className="text-xs text-neutral-400 mt-5">
                 {formData.active_agents.length} of {agentRoles.length} agents selected
               </p>
             </div>
           </motion.div>
 
           {/* Advanced Settings */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <div className="card overflow-hidden">
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center justify-between w-full text-left px-6 sm:px-7 py-4 sm:py-5 hover:bg-neutral-50 transition-colors"
+                className="flex items-center justify-between w-full text-left px-7 sm:px-8 py-5 hover:bg-neutral-50 transition-colors"
               >
                 <span className="text-sm font-semibold text-neutral-700">Advanced Settings</span>
                 <ChevronDown className={`h-4 w-4 text-neutral-400 transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} />
@@ -353,9 +358,9 @@ const Generator = () => {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 sm:px-7 pb-6 sm:pb-7 pt-2 border-t border-neutral-100 space-y-5">
+                    <div className="px-7 sm:px-8 pb-7 sm:pb-8 pt-3 border-t border-neutral-100 space-y-6">
                       <div>
-                        <label className="label block mb-2">Additional Requirements</label>
+                        <label className="label block mb-2.5">Additional Requirements</label>
                         <textarea
                           value={formData.additional_requirements}
                           onChange={e => setFormData(p => ({ ...p, additional_requirements: e.target.value }))}
@@ -364,7 +369,7 @@ const Generator = () => {
                         />
                       </div>
                       <div>
-                        <label className="label block mb-2">Technology Preferences</label>
+                        <label className="label block mb-2.5">Technology Preferences</label>
                         <input
                           type="text"
                           value={formData.tech_stack_preferences.join(', ')}
@@ -375,7 +380,7 @@ const Generator = () => {
                           placeholder="React, Node.js, PostgreSQL, Docker..."
                           className="input"
                         />
-                        <p className="text-xs text-neutral-400 mt-1.5">Comma-separated list of preferred technologies</p>
+                        <p className="text-xs text-neutral-400 mt-2">Comma-separated list of preferred technologies</p>
                       </div>
                     </div>
                   </motion.div>
@@ -386,10 +391,10 @@ const Generator = () => {
 
           {/* Submit */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 pb-10"
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 pb-12"
           >
             <p className="text-xs text-neutral-400 order-2 sm:order-1">
               Generation typically takes 2–5 minutes
@@ -397,11 +402,11 @@ const Generator = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-primary px-8 py-3 text-sm w-full sm:w-auto order-1 sm:order-2"
+              className="btn-primary px-8 py-3.5 text-sm w-full sm:w-auto order-1 sm:order-2 gap-2 shadow-md hover:shadow-lg"
             >
               {isSubmitting
-                ? <><Loader className="animate-spin h-4 w-4 mr-2" />Starting...</>
-                : <><Play className="h-4 w-4 mr-2" />Generate App</>
+                ? <><Loader className="animate-spin h-4 w-4" />Starting...</>
+                : <><Play className="h-4 w-4" />Generate App</>
               }
             </button>
           </motion.div>
