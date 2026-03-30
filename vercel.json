@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "env": {
+    "UV_LINK_MODE": "copy"
+  },
   "functions": {
     "api/index.py": {
       "runtime": "@vercel/python@4.3.1"
