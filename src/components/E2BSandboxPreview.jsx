@@ -87,7 +87,7 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
   return (
     <div className="space-y-4">
       {/* Tab Navigation */}
-      <div className="glass-card p-1 flex space-x-1">
+      <div className="card p-1.5 flex space-x-1">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -95,12 +95,11 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
             <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`flex-1 inline-flex items-center justify-center py-2.5 px-4 rounded-xl body-sm font-semibold transition-all duration-200 ${
+              className={`flex-1 inline-flex items-center justify-center py-2.5 px-4 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? 'bg-gradient-to-r from-primary-400 to-accent-500 text-white shadow-glow'
-                  : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+                  ? 'bg-primary-600 text-white shadow-sm'
+                  : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100'
               }`}
             >
               <Icon className={`mr-2 h-4 w-4 ${isActive ? 'text-white' : 'text-neutral-400'}`} />
@@ -126,13 +125,13 @@ const E2BSandboxPreview = ({ generationId, artifacts = [] }) => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card p-4 border-success-200 bg-success-50"
+          className="card p-5 border-success-200 bg-success-50"
         >
-          <div className="flex items-center">
-            <div className="w-3 h-3 bg-success-500 rounded-full mr-3 animate-pulse" />
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-success-500 rounded-full animate-pulse flex-shrink-0" />
             <div>
               <p className="label text-success-700">Application is running</p>
-              <p className="caption text-success-600">Your application is live and accessible via the preview URL.</p>
+              <p className="caption text-success-600 mt-0.5">Your application is live and accessible via the preview URL.</p>
             </div>
           </div>
         </motion.div>

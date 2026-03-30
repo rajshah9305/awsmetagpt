@@ -94,9 +94,9 @@ const LogViewer = ({ generationId, isActive }) => {
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-neutral-200/60">
+      <div className="flex items-center justify-between p-5 border-b border-neutral-100">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-neutral-900 rounded-lg flex items-center justify-center">
+          <div className="w-9 h-9 bg-neutral-900 rounded-xl flex items-center justify-center">
             <Terminal className="w-4 h-4 text-green-400" />
           </div>
           <h3 className="body-lg font-semibold text-neutral-900">Application Logs</h3>
@@ -104,7 +104,7 @@ const LogViewer = ({ generationId, isActive }) => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <label className="flex items-center space-x-2 caption text-neutral-600 cursor-pointer">
+          <label className="flex items-center space-x-2 caption text-neutral-500 cursor-pointer">
             <input
               type="checkbox"
               checked={autoScroll}
@@ -114,19 +114,11 @@ const LogViewer = ({ generationId, isActive }) => {
             <span>Auto-scroll</span>
           </label>
 
-          <button
-            onClick={loadLogs}
-            className="btn-ghost p-2 rounded-lg"
-            title="Refresh logs"
-          >
+          <button onClick={loadLogs} className="btn-ghost p-2 rounded-xl" title="Refresh logs">
             <RotateCcw className="w-4 h-4" />
           </button>
 
-          <button
-            onClick={handleDownload}
-            className="btn-ghost p-2 rounded-lg"
-            title="Download logs"
-          >
+          <button onClick={handleDownload} className="btn-ghost p-2 rounded-xl" title="Download logs">
             <Download className="w-4 h-4" />
           </button>
         </div>

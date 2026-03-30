@@ -102,7 +102,8 @@ class RequestValidator:
         if not allowed_types:
             allowed_types = ['application/json', 'multipart/form-data']
         
-        content_type = request.headers.get('content-type', '').split(';')[0]
+        content_type = request.headers.get('content-type', '').split(';')[0].strip()
+        # Only reject if a content-type is explicitly set and it's not in the allowed list
         if content_type and content_type not in allowed_types:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,

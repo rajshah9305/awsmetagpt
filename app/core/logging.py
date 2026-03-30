@@ -4,8 +4,7 @@ Unified logging utility for the MetaGPT + E2B system
 
 import logging
 import sys
-from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 from pathlib import Path
 
 from app.core.config import settings

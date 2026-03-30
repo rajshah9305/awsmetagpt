@@ -410,16 +410,8 @@ class ApplicationRunnerFactory:
         process_manager: ProcessManager, 
         file_manager: SandboxFileManager
     ) -> ApplicationRunner:
-        """Create appropriate runner based on project type"""
-        
-        runners = [
-            ReactRunner(sandbox_id, process_manager, file_manager),
-            PythonRunner(sandbox_id, process_manager, file_manager),
-            NodeRunner(sandbox_id, process_manager, file_manager),
-            StaticRunner(sandbox_id, process_manager, file_manager)
-        ]
-        
-        return runners  # Return all runners for now
+        """Create appropriate runner based on project type — use get_best_runner for async detection."""
+        return StaticRunner(sandbox_id, process_manager, file_manager)
     
     @staticmethod
     async def get_best_runner(

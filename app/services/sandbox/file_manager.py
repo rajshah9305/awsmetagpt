@@ -76,13 +76,15 @@ class SandboxFileManager:
         
         # Sanitize file name
         safe_name = self._sanitize_filename(file_name)
+        # Use only the final component as the display name
+        display_name = safe_name.split('/')[-1]
         
         # Determine file path
         file_path = self._determine_file_path(safe_name, artifact)
         
         # Store file info
         file_info = {
-            'name': safe_name,
+            'name': display_name,
             'path': file_path,
             'content': content,
             'size': len(content),
@@ -98,20 +100,24 @@ class SandboxFileManager:
         logger.debug(f"Wrote file {file_path} ({len(content)} bytes) to sandbox {self.sandbox_id}")
     
     def _sanitize_filename(self, filename: str) -> str:
-        """Sanitize filename for security"""
-        # Remove dangerous characters
-        dangerous_chars = ['..', '/', '\\', ':', '*', '?', '"', '<', '>', '|']
-        safe_name = filename
-        
-        for char in dangerous_chars:
-            safe_name = safe_name.replace(char, '_')
-        
+        """Sanitize filename for security — strips path traversal and dangerous chars."""
+        # Normalize separators and strip traversal sequences
+        safe_name = filename.replace('\\', '/').strip('/')
+        # Remove any remaining dangerous characters from the final filename component
+        parts = [p for p in safe_name.split('/') if p and p != '..']
+        if not parts:
+            return 'file'
+        # Sanitize the last component (actual filename)
+        name = parts[-1]
+        for char in [':', '*', '?', '"', '<', '>', '|']:
+            name = name.replace(char, '_')
+        parts[-1] = name
+        result = '/'.join(parts)
         # Ensure reasonable length
-        if len(safe_name) > 255:
-            name_part, ext = safe_name.rsplit('.', 1) if '.' in safe_name else (safe_name, '')
-            safe_name = name_part[:250] + ('.' + ext if ext else '')
-        
-        return safe_name
+        if len(result) > 255:
+            name_part, _, ext = result.rpartition('.')
+            result = name_part[:250] + ('.' + ext if ext else '')
+        return result
     
     def _determine_file_path(self, filename: str, artifact: Dict) -> str:
         """Determine appropriate file path, preventing path traversal"""

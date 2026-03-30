@@ -119,8 +119,11 @@ class SandboxManager:
             # Store the actual E2B sandbox instance
             sandbox_info.sandbox_instance = sandbox
             
-            # Get the sandbox URL (E2B provides this)
-            sandbox_info.preview_url = f"https://{sandbox.get_host(3000)}" if hasattr(sandbox, 'get_host') else None
+            # Get the sandbox URL if available
+            try:
+                sandbox_info.preview_url = f"https://{sandbox.get_host(3000)}"
+            except Exception:
+                sandbox_info.preview_url = None
             
             logger.info(f"✅ Real E2B sandbox {sandbox_info.id} created successfully")
             

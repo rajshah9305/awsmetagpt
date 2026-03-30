@@ -32,7 +32,7 @@ class Settings(BaseSettings):
 
     # Bedrock
     BEDROCK_REGION: str = Field(default="us-west-2")
-    BEDROCK_MODEL: str = Field(default="anthropic.claude-3-haiku-20240307-v1:0")
+    BEDROCK_MODEL: str = Field(default="anthropic.claude-3-haiku-20240307-v1:0")  # Must match a BedrockModel enum value
 
     # MetaGPT
     METAGPT_WORKSPACE: str = Field(default="./workspace")
@@ -57,7 +57,6 @@ class Settings(BaseSettings):
     # Feature flags
     ENABLE_E2B: bool = Field(default=True)
     ENABLE_BEDROCK: bool = Field(default=True)
-    ENABLE_WEBSOCKETS: bool = Field(default=True)
 
     @field_validator("LOG_LEVEL")
     @classmethod

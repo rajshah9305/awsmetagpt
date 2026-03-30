@@ -49,9 +49,10 @@ const ArtifactViewer = ({ artifact }) => {
       <div className="prose prose-neutral max-w-none p-2">
         <ReactMarkdown
           components={{
-            code({ inline, className, children, ...props }) {
+            code({ node, className, children, ...props }) {
               const match = /language-(\w+)/.exec(className || '')
-              return !inline && match ? (
+              const isBlock = node?.position?.start?.line !== node?.position?.end?.line
+              return isBlock && match ? (
                 <pre className="bg-neutral-900 text-green-400 p-4 rounded-xl overflow-x-auto">
                   <code className={`language-${match[1]}`}>
                     {String(children).replace(/\n$/, '')}
@@ -84,14 +85,14 @@ const ArtifactViewer = ({ artifact }) => {
       className="glass-card overflow-hidden"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 sm:p-5 border-b border-neutral-200/60">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-5 sm:p-6 border-b border-neutral-100">
         <div className="flex items-center space-x-3 min-w-0 flex-1">
-          <div className="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
             <FileText className="h-5 w-5 text-primary-600" />
           </div>
           <div className="min-w-0">
             <h3 className="label text-neutral-900 truncate">{artifact.name}</h3>
-            <p className="caption text-neutral-500">
+            <p className="caption text-neutral-400">
               {artifact.agent_role?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               {artifact.size && ` · ${(artifact.size / 1024).toFixed(1)}KB`}
             </p>
@@ -153,8 +154,7 @@ const ArtifactViewer = ({ artifact }) => {
       <div className="max-h-96 overflow-auto custom-scrollbar">
         {renderContent()}
       </div>
-    </motion.div>
-  )
+    </motion.div>  )
 }
 
 export default ArtifactViewer

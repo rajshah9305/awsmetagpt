@@ -26,9 +26,6 @@ class AgentStateManager:
         if agent_id in self.agents:
             raise OrchestrationException(f"Agent {agent_id} already exists")
         
-        if role in self.role_to_agent:
-            raise OrchestrationException(f"Agent with role {role} already exists")
-        
         agent = AgentInstance(
             id=agent_id,
             role=role,
@@ -36,6 +33,7 @@ class AgentStateManager:
         )
         
         self.agents[agent_id] = agent
+        # role_to_agent maps to the most recently created agent for that role
         self.role_to_agent[role] = agent_id
         
         logger.info(f"Created agent {agent_id} with role {role}")
@@ -74,7 +72,7 @@ class AgentStateManager:
         self._notify_state_change(agent, AgentState.EXECUTING)
         logger.info(f"Assigned task {task.id} to agent {agent_id}")
     
-    def complete_task(self, agent_id: str, result: Optional[Dict] = None) -> None:
+    def complete_task(self, agent_id: str, result: Optional[dict] = None) -> None:
         """Mark agent's current task as completed"""
         agent = self.get_agent(agent_id)
         if not agent:

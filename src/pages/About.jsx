@@ -49,16 +49,16 @@ const steps = [
 const About = () => (
   <div className="min-h-screen bg-surface">
     {/* Page header */}
-    <div className="bg-white border-b border-neutral-200">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+    <div className="bg-white border-b border-neutral-100">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <motion.div {...fadeUp()}>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-sm">
               <Cpu className="h-5 w-5 text-white" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">About</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary-500">About</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 font-display mb-3">MetaGPT + AWS Bedrock</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-neutral-900 font-display mb-4">MetaGPT + AWS Bedrock</h1>
           <p className="text-neutral-500 max-w-2xl text-base sm:text-lg leading-relaxed">
             A platform combining MetaGPT's multi-agent framework with AWS Bedrock's foundation models
             to generate complete applications from natural language descriptions.
@@ -67,22 +67,22 @@ const About = () => (
       </div>
     </div>
 
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-14">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16">
 
       {/* How It Works */}
       <section>
-        <motion.div {...fadeUp()} className="mb-8">
-          <p className="section-label mb-2">Process</p>
+        <motion.div {...fadeUp()} className="mb-10">
+          <p className="section-label mb-2.5">Process</p>
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 font-display">How It Works</h2>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {steps.map((step, i) => (
             <motion.div key={step.number} {...fadeUp(i * 0.08)}>
-              <div className="card p-6 sm:p-7 h-full">
-                <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center mb-5">
+              <div className="card p-7 sm:p-8 h-full hover:shadow-elevation-2 hover:-translate-y-0.5 transition-all duration-200">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center mb-6 shadow-sm">
                   <span className="text-white font-bold text-xs">{step.number}</span>
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-900 mb-2.5">{step.title}</h3>
+                <h3 className="text-sm font-semibold text-neutral-900 mb-3">{step.title}</h3>
                 <p className="text-sm text-neutral-500 leading-relaxed">{step.description}</p>
               </div>
             </motion.div>
@@ -92,19 +92,19 @@ const About = () => (
 
       {/* Technologies */}
       <section>
-        <motion.div {...fadeUp()} className="mb-8">
-          <p className="section-label mb-2">Stack</p>
+        <motion.div {...fadeUp()} className="mb-10">
+          <p className="section-label mb-2.5">Stack</p>
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 font-display">Built With Leading Technologies</h2>
         </motion.div>
-        <div className="card p-7 sm:p-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="card p-8 sm:p-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
             {technologies.map((tech, i) => (
               <motion.div key={tech.name} {...fadeUp(i * 0.06)}>
-                <div className="w-11 h-11 bg-primary-50 rounded-xl flex items-center justify-center mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl flex items-center justify-center mb-5 shadow-sm">
                   {React.createElement(tech.icon, { className: 'h-5 w-5 text-primary-600' })}
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-900 mb-1.5">{tech.name}</h3>
-                <p className="text-xs text-neutral-500 mb-3 leading-relaxed">{tech.description}</p>
+                <h3 className="text-sm font-semibold text-neutral-900 mb-2">{tech.name}</h3>
+                <p className="text-xs text-neutral-500 mb-4 leading-relaxed">{tech.description}</p>
                 <a href={tech.link} target="_blank" rel="noopener noreferrer"
                   className="inline-flex items-center text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors">
                   Learn More <ExternalLink className="h-3 w-3 ml-1" />
@@ -117,18 +117,18 @@ const About = () => (
 
       {/* AI Agents */}
       <section>
-        <motion.div {...fadeUp()} className="mb-8">
-          <p className="section-label mb-2">Team</p>
+        <motion.div {...fadeUp()} className="mb-10">
+          <p className="section-label mb-2.5">Team</p>
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 font-display">AI Agent Roles</h2>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {agents.map((agent, i) => (
             <motion.div key={agent.role} {...fadeUp(i * 0.06)}>
-              <div className="card p-6 h-full hover:shadow-md hover:border-neutral-300 transition-all duration-200">
-                <div className={`w-8 h-8 rounded-lg ${agent.color} flex items-center justify-center mb-4`}>
+              <div className="card p-7 h-full hover:shadow-elevation-2 hover:-translate-y-0.5 transition-all duration-200">
+                <div className={`w-9 h-9 rounded-xl ${agent.color} flex items-center justify-center mb-5 shadow-sm`}>
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-900 mb-2">{agent.role}</h3>
+                <h3 className="text-sm font-semibold text-neutral-900 mb-2.5">{agent.role}</h3>
                 <p className="text-xs text-neutral-500 leading-relaxed">{agent.description}</p>
               </div>
             </motion.div>
@@ -138,15 +138,17 @@ const About = () => (
 
       {/* Platform Features */}
       <section>
-        <motion.div {...fadeUp()} className="mb-8">
-          <p className="section-label mb-2">Features</p>
+        <motion.div {...fadeUp()} className="mb-10">
+          <p className="section-label mb-2.5">Features</p>
           <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 font-display">Platform Capabilities</h2>
         </motion.div>
-        <div className="card p-7 sm:p-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+        <div className="card p-8 sm:p-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl">
             {features.map((f, i) => (
               <motion.div key={f} {...fadeUp(i * 0.04)} className="flex items-center gap-3">
-                <CheckCircle className="h-4 w-4 text-success-500 flex-shrink-0" />
+                <div className="w-5 h-5 rounded-full bg-success-50 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-3.5 w-3.5 text-success-500" />
+                </div>
                 <span className="text-sm text-neutral-700">{f}</span>
               </motion.div>
             ))}
@@ -156,17 +158,20 @@ const About = () => (
 
       {/* CTA */}
       <motion.section {...fadeUp()}>
-        <div className="card p-10 sm:p-14 bg-primary-600 border-primary-700 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white font-display mb-3">
-            Ready to Experience the Future of Development?
-          </h2>
-          <p className="text-primary-200 mb-8 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-            Generate your first app in minutes, not months.
-          </p>
-          <Link to="/generate" className="inline-flex items-center justify-center px-7 py-3 rounded-lg bg-white text-primary-700 text-sm font-semibold hover:bg-primary-50 transition-colors shadow-sm">
-            Start Building Now
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
+        <div className="relative overflow-hidden card p-12 sm:p-16 bg-gradient-to-br from-primary-600 to-primary-800 border-primary-700 text-center shadow-elevation-3">
+          <div className="absolute inset-0 bg-dots opacity-20 pointer-events-none" />
+          <div className="relative">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white font-display mb-4">
+              Ready to Experience the Future of Development?
+            </h2>
+            <p className="text-primary-200 mb-10 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
+              Generate your first app in minutes, not months.
+            </p>
+            <Link to="/generate" className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-white text-primary-700 text-sm font-semibold hover:bg-primary-50 transition-colors shadow-md">
+              Start Building Now
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </motion.section>
 

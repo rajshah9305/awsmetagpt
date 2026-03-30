@@ -62,8 +62,12 @@ async def event_stream(client_id: str) -> AsyncGenerator[str, None]:
                 yield event
 
                 # Signal the consumer that we're done streaming
-                if '"type": "stream_end"' in event or '"type": "error"' in event:
-                    break
+                try:
+                    payload = json.loads(event.removeprefix("data: ").rstrip())
+                    if payload.get("type") in ("stream_end", "error"):
+                        break
+                except (json.JSONDecodeError, ValueError):
+                    pass
             except asyncio.TimeoutError:
                 # Keep-alive ping so Vercel doesn't close the connection
                 yield ": ping\n\n"

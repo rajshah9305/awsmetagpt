@@ -61,12 +61,7 @@ class BedrockClient:
                     "anthropic_version": "bedrock-2023-05-31",
                     "max_tokens": max_tokens,
                     "temperature": temperature,
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ]
+                    "messages": [{"role": "user", "content": prompt}]
                 }
             elif model_id.value.startswith("us.meta.llama") or model_id.value.startswith("meta.llama"):
                 body = {
@@ -75,28 +70,19 @@ class BedrockClient:
                     "temperature": temperature,
                     "top_p": 0.9
                 }
-            elif model_id.value.startswith("us.amazon.nova") or model_id.value.startswith("amazon.nova"):
+            elif model_id.value.startswith("mistral."):
                 body = {
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": [{"text": prompt}]
-                        }
-                    ],
-                    "inferenceConfig": {
-                        "maxTokens": max_tokens,
-                        "temperature": temperature,
-                        "topP": 0.9
-                    }
+                    "prompt": prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "top_p": 0.9
                 }
-            elif model_id.value.startswith("amazon.titan"):
+            elif model_id.value.startswith("cohere."):
                 body = {
-                    "inputText": prompt,
-                    "textGenerationConfig": {
-                        "maxTokenCount": max_tokens,
-                        "temperature": temperature,
-                        "topP": 0.9
-                    }
+                    "prompt": prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "p": 0.9
                 }
             else:
                 logger.error(f"Unsupported model: {model_id}")
@@ -120,10 +106,10 @@ class BedrockClient:
                 return response_body.get('content', [{}])[0].get('text', '')
             elif model_id.value.startswith("us.meta.llama") or model_id.value.startswith("meta.llama"):
                 return response_body.get('generation', '')
-            elif model_id.value.startswith("us.amazon.nova") or model_id.value.startswith("amazon.nova"):
-                return response_body.get('output', {}).get('message', {}).get('content', [{}])[0].get('text', '')
-            elif model_id.value.startswith("amazon.titan"):
-                return response_body.get('results', [{}])[0].get('outputText', '')
+            elif model_id.value.startswith("mistral."):
+                return response_body.get('outputs', [{}])[0].get('text', '')
+            elif model_id.value.startswith("cohere."):
+                return response_body.get('generations', [{}])[0].get('text', '')
             
             return None
             

@@ -38,8 +38,7 @@ wheels/
 
 # Logs
 *.log
-logs/
-app.log
+logs/*.log
 
 # Node
 node_modules/
@@ -69,3 +68,6 @@ analyze_codebase.py
 
 # Verification screenshots (not needed in repo)
 verification/
+
+# API duplicate (Vercel entry point only)
+api/index.py

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Cpu, Menu, X } from 'lucide-react'
+import { Cpu, Menu, X, Sparkles } from 'lucide-react'
 
 const Header = () => {
   const location = useLocation()
@@ -18,13 +18,13 @@ const Header = () => {
   const isActive = (path) => location.pathname === path
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-neutral-200">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-100 shadow-elevation-1">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
+          <Link to="/" className="flex items-center gap-3 group flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-sm transition-transform duration-200 group-hover:scale-105">
               <Cpu className="h-4 w-4 text-white" />
             </div>
             <div>
@@ -39,17 +39,17 @@ const Header = () => {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                className={`relative px-4 py-2 text-sm font-medium rounded-xl transition-all duration-150 ${
                   isActive(item.href)
                     ? 'text-primary-700 bg-primary-50'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
+                    : 'text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100'
                 }`}
               >
                 {item.name}
                 {isActive(item.href) && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-x-1 -bottom-px h-0.5 bg-primary-600 rounded-full"
+                    className="absolute inset-x-2 -bottom-px h-0.5 bg-primary-500 rounded-full"
                     initial={false}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
@@ -60,7 +60,8 @@ const Header = () => {
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/generate" className="btn-primary text-sm px-4 py-2">
+            <Link to="/generate" className="btn-primary text-sm px-4 py-2 gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" />
               Start Generating
             </Link>
           </div>
@@ -68,7 +69,7 @@ const Header = () => {
           {/* Mobile toggle */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-lg text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+            className="md:hidden p-2 rounded-xl text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
           >
             <AnimatePresence mode="wait" initial={false}>
@@ -100,7 +101,7 @@ const Header = () => {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                    className={`px-3 py-2.5 text-sm font-medium rounded-xl transition-colors ${
                       isActive(item.href)
                         ? 'text-primary-700 bg-primary-50'
                         : 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100'
@@ -110,7 +111,8 @@ const Header = () => {
                   </Link>
                 ))}
                 <div className="pt-2 pb-1">
-                  <Link to="/generate" className="btn-primary w-full justify-center text-sm">
+                  <Link to="/generate" className="btn-primary w-full justify-center text-sm gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
                     Start Generating
                   </Link>
                 </div>
