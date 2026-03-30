@@ -1,0 +1,13 @@
+# Install after the base API deps:
+#   pip install -r requirements.txt
+#   pip install -r requirements-metagpt.txt
+# Or: pip install -e ".[metagpt]"
+#
+# MetaGPT pulls a large dependency tree; resolver may take a few minutes.
+# Base requirements.txt pins pydantic/aiohttp to ranges compatible with MetaGPT 0.8.x.
+# If you later `pip install -e .` and versions drift, run:
+#   pip install -r requirements-metagpt.txt
+# again.
+# Official project: https://github.com/FoundationAgents/MetaGPT
+
+metagpt==0.8.1

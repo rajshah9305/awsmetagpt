@@ -17,6 +17,30 @@ from app.models.schemas import AgentRole, GenerationRequest
 
 logger = get_logger(__name__)
 
+# Values copied from .env.example are not real keys — treat as unset
+_PLACEHOLDER_MARKERS = (
+    "your_openai_api_key_here",
+    "your_anthropic_api_key_here",
+    "your_api_key_here",
+    "changeme",
+    "replace_me",
+)
+
+
+def _effective_llm_api_key(raw: str) -> str:
+    """Return stripped key if non-empty and not a template placeholder."""
+    if not raw:
+        return ""
+    key = raw.strip()
+    if len(key) < 8:
+        return ""
+    lower = key.lower()
+    if lower in _PLACEHOLDER_MARKERS:
+        return ""
+    if "your_" in lower and "here" in lower:
+        return ""
+    return key
+
 
 class MetaGPTExecutor:
     """Handles MetaGPT execution and configuration"""
@@ -45,19 +69,24 @@ class MetaGPTExecutor:
             api_key = None
             model = None
             
-            if settings.OPENAI_API_KEY:
+            openai_key = _effective_llm_api_key(settings.OPENAI_API_KEY)
+            anthropic_key = _effective_llm_api_key(settings.ANTHROPIC_API_KEY)
+
+            if openai_key:
                 api_type = "openai"
-                api_key = settings.OPENAI_API_KEY
+                api_key = openai_key
                 model = "gpt-4"
                 logger.info("Using OpenAI API for MetaGPT agents")
-            elif settings.ANTHROPIC_API_KEY:
+            elif anthropic_key:
                 api_type = "anthropic"
-                api_key = settings.ANTHROPIC_API_KEY
+                api_key = anthropic_key
                 model = "claude-3-sonnet-20240229"
                 logger.info("Using Anthropic API for MetaGPT agents")
             else:
                 raise MetaGPTException(
-                    "No AI API key configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY in your .env file."
+                    "MetaGPT requires OPENAI_API_KEY or ANTHROPIC_API_KEY (direct API keys). "
+                    "AWS Bedrock credentials alone do not configure MetaGPT agents. "
+                    "Set one of these in .env and restart the server."
                 )
             
             # Create MetaGPT configuration
@@ -93,6 +122,63 @@ class MetaGPTExecutor:
         except Exception as e:
             logger.error(f"Failed to setup MetaGPT: {e}")
             raise MetaGPTException(f"MetaGPT setup failed: {e}")
+
+    def _run_metagpt_team_blocking(
+        self,
+        request: GenerationRequest,
+        session_id: str,
+        team_role_classes: List[type],
+    ) -> Optional[Any]:
+        """
+        Run MetaGPT Team using the same sequence as upstream ``generate_repo``:
+        invest → run_project(idea) → asyncio.run(company.run(n_round=...)).
+
+        See: https://github.com/FoundationAgents/MetaGPT/blob/main/metagpt/software_company.py
+        """
+        from metagpt.config2 import config
+        from metagpt.context import Context
+        from metagpt.team import Team
+        from metagpt.roles import Engineer
+
+        if not team_role_classes:
+            raise MetaGPTException(
+                "No MetaGPT agents to run. Select at least one role (e.g. product_manager, engineer)."
+            )
+
+        workspace_root = Path(settings.METAGPT_WORKSPACE)
+        if not workspace_root.is_absolute():
+            workspace_root = Path.cwd() / workspace_root
+        workspace_path = workspace_root / session_id
+        workspace_path.mkdir(parents=True, exist_ok=True)
+
+        project_name = f"app_{session_id}"
+        config.update_via_cli(str(workspace_path), project_name, False, "", 0)
+        ctx = Context(config=config)
+        company = Team(context=ctx)
+
+        roles_to_hire = []
+        for cls in team_role_classes:
+            if cls is Engineer:
+                roles_to_hire.append(Engineer(n_borg=1, use_code_review=True))
+            else:
+                roles_to_hire.append(cls())
+        company.hire(roles_to_hire)
+
+        investment = 3.0
+        if request.priority.value == "high":
+            investment = 5.0
+        elif request.priority.value == "critical":
+            investment = 6.0
+
+        n_round = min(max(request.timeout_minutes // 2, 3), 10)
+        idea = self._enhance_requirement(request)
+
+        # Match metagpt.software_company.generate_repo (FoundationAgents/MetaGPT)
+        company.invest(investment)
+        company.run_project(idea)
+        asyncio.run(company.run(n_round=n_round))
+
+        return ctx.repo
     
     async def execute_generation(
         self, 
@@ -110,21 +196,20 @@ class MetaGPTExecutor:
             
             # Import MetaGPT (lazy import to avoid startup issues)
             try:
-                from metagpt.software_company import SoftwareCompany
                 from metagpt.roles import (
-                    ProductManager, Architect, ProjectManager,
-                    Engineer, QaEngineer
+                    ProductManager,
+                    Architect,
+                    ProjectManager,
+                    Engineer,
+                    QaEngineer,
                 )
             except ImportError as e:
                 raise MetaGPTException(
-                    f"MetaGPT package not installed. Run: pip install metagpt==0.8.1 --no-deps. Error: {e}"
+                    f"MetaGPT package not installed. Run: pip install -e \".[metagpt]\" or pip install metagpt==0.8.1. Error: {e}"
                 )
             
             if progress_callback:
-                await progress_callback(10, "Initializing MetaGPT company...")
-            
-            # Create software company
-            company = SoftwareCompany()
+                await progress_callback(10, "Initializing MetaGPT team...")
             
             # Map agent roles to MetaGPT roles (DevOps maps to Engineer; MetaGPT has no DevOps role)
             role_mapping = {
@@ -136,7 +221,7 @@ class MetaGPTExecutor:
                 AgentRole.DEVOPS: Engineer,
             }
             # One hire per MetaGPT role class to avoid duplicate agents when e.g. Engineer + DevOps
-            team_role_classes = []
+            team_role_classes: List[type] = []
             seen_metagpt_classes = set()
             for role in request.active_agents:
                 if role not in role_mapping:
@@ -147,25 +232,26 @@ class MetaGPTExecutor:
                 seen_metagpt_classes.add(cls)
                 team_role_classes.append(cls)
 
-            company.hire([cls() for cls in team_role_classes])
-            
+            if not team_role_classes:
+                raise MetaGPTException(
+                    "No compatible agent roles selected. Include at least one: "
+                    "product_manager, architect, project_manager, engineer, qa_engineer, or devops."
+                )
+
             if progress_callback:
                 await progress_callback(20, "Starting MetaGPT generation...")
             
-            # Enhanced requirement with context
-            enhanced_requirement = self._enhance_requirement(request)
-            
-            # Execute in thread pool to avoid blocking
-            result = await asyncio.get_event_loop().run_in_executor(
-                None, 
-                lambda: company.run_project(enhanced_requirement)
-            )
+            loop = asyncio.get_event_loop()
+
+            def _blocking():
+                return self._run_metagpt_team_blocking(request, session_id, team_role_classes)
+
+            project_repo = await loop.run_in_executor(None, _blocking)
             
             if progress_callback:
                 await progress_callback(90, "Processing MetaGPT results...")
             
-            # Process results
-            artifacts = await self._process_metagpt_results(result, session_id)
+            artifacts = await self._process_metagpt_results(session_id, project_repo=project_repo)
             
             return {
                 'success': True,
@@ -202,41 +288,72 @@ Please generate a complete, production-ready application with:
 """
         return enhanced
     
-    async def _process_metagpt_results(self, result: Any, session_id: str) -> List[Dict[str, Any]]:
-        """Process MetaGPT results into artifacts"""
-        artifacts = []
-        
+    def _workspace_roots_for_session(
+        self, session_id: str, project_repo: Optional[Any] = None
+    ) -> List[Path]:
+        """Paths where MetaGPT may write output (session dir + optional ProjectRepo root)."""
+        roots: List[Path] = []
+        base = Path(settings.METAGPT_WORKSPACE) / session_id
+        if not base.is_absolute():
+            base = Path.cwd() / base
+        roots.append(base.resolve())
+        if project_repo is not None:
+            try:
+                wd = Path(project_repo.workdir).resolve()
+                if wd not in roots:
+                    roots.append(wd)
+            except Exception as e:
+                logger.debug(f"No project_repo.workdir: {e}")
+        return roots
+
+    async def _process_metagpt_results(
+        self, session_id: str, project_repo: Optional[Any] = None
+    ) -> List[Dict[str, Any]]:
+        """Collect generated files from MetaGPT workspace(s)."""
+        artifacts: List[Dict[str, Any]] = []
+        seen_paths: set = set()
+
         try:
-            # Get workspace path
-            workspace_path = Path(settings.METAGPT_WORKSPACE) / session_id
-            
-            if workspace_path.exists():
-                # Process generated files
+            for workspace_path in self._workspace_roots_for_session(session_id, project_repo):
+                if not workspace_path.exists():
+                    continue
                 for file_path in workspace_path.rglob("*"):
-                    if file_path.is_file() and not file_path.name.startswith('.'):
-                        try:
-                            content = file_path.read_text(encoding='utf-8')
-                            
-                            artifact = {
-                                'id': f"{session_id}_{file_path.name}",
-                                'name': file_path.name,
-                                'type': self._determine_file_type(file_path),
-                                'content': content,
-                                'agent_role': 'metagpt',
-                                'file_path': str(file_path.relative_to(workspace_path)),
-                                'size': len(content),
-                                'created_at': datetime.now().isoformat(),
-                                'language': self._detect_language(file_path)
-                            }
-                            
-                            artifacts.append(artifact)
-                            
-                        except Exception as e:
-                            logger.warning(f"Failed to process file {file_path}: {e}")
-            
-            logger.info(f"Processed {len(artifacts)} artifacts from MetaGPT")
+                    if not file_path.is_file() or file_path.name.startswith('.'):
+                        continue
+                    try:
+                        resolved = file_path.resolve()
+                        if resolved in seen_paths:
+                            continue
+                        seen_paths.add(resolved)
+                        content = file_path.read_text(encoding='utf-8')
+                    except UnicodeDecodeError:
+                        logger.warning(f"Skipping binary or non-UTF-8 file: {file_path}")
+                        continue
+                    except Exception as e:
+                        logger.warning(f"Failed to read file {file_path}: {e}")
+                        continue
+
+                    try:
+                        rel = str(file_path.relative_to(workspace_path))
+                    except ValueError:
+                        rel = file_path.name
+
+                    artifact = {
+                        'id': f"{session_id}_{rel.replace('/', '_')}",
+                        'name': file_path.name,
+                        'type': self._determine_file_type(file_path),
+                        'content': content,
+                        'agent_role': 'metagpt',
+                        'file_path': rel,
+                        'size': len(content),
+                        'created_at': datetime.now().isoformat(),
+                        'language': self._detect_language(file_path),
+                    }
+                    artifacts.append(artifact)
+
+            logger.info(f"Processed {len(artifacts)} artifacts from MetaGPT workspace(s)")
             return artifacts
-            
+
         except Exception as e:
             logger.error(f"Failed to process MetaGPT results: {e}")
             return []
@@ -307,9 +424,12 @@ Please generate a complete, production-ready application with:
         """Validate generation request"""
         errors = []
         
-        # Check if MetaGPT is configured
+        # Check if MetaGPT is configured (needs OpenAI or Anthropic — not Bedrock alone)
         if not self.metagpt_configured:
-            errors.append("MetaGPT not configured")
+            errors.append(
+                self._setup_error
+                or "MetaGPT is not configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY in .env and restart."
+            )
         
         # Validate agent roles
         supported_roles = self.get_supported_roles()
