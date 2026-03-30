@@ -14,7 +14,7 @@ from app.models.schemas import (
 from app.core.exceptions import MetaGPTSystemException
 from app.core.logging import get_logger
 from app.core.config import settings
-from .dependencies import get_validated_request, get_services, check_system_health
+from .dependencies import get_validated_request, get_services
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -26,11 +26,20 @@ async def generate_app(
     gen_request: GenerationRequest,
     request_data: dict = Depends(get_validated_request),
     services: dict = Depends(get_services),
-    _health: None = Depends(check_system_health),
 ):
     """Generate an application using MetaGPT agents"""
     request_id = request_data.get('request_id')
     logger.info(f"Received generation request {request_id} for app type: {gen_request.app_type}")
+
+    # Check system capacity
+    orchestrator = services['orchestrator']
+    stats = orchestrator.get_statistics()
+    active_sessions = stats.get('status_distribution', {}).get('running', 0)
+    if active_sessions >= settings.MAX_CONCURRENT_SESSIONS:
+        raise HTTPException(
+            status_code=429,
+            detail="System at capacity. Please try again later."
+        )
 
     try:
         orchestrator = services['orchestrator']
@@ -96,7 +105,6 @@ async def stream_generation_events(generation_id: str):
             "X-Accel-Buffering": "no",
         },
     )
-
 
 @router.get("/generate/{generation_id}/artifacts", response_model=List[GeneratedArtifact])
 async def get_generation_artifacts(

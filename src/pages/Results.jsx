@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -16,8 +16,8 @@ import E2BSandboxPreview from '../components/E2BSandboxPreview'
 // Skeleton for loading state
 const ResultsSkeleton = () => (
   <div className="space-y-5">
-    <div className="card p-6">
-      <div className="flex items-center justify-between mb-4">
+    <div className="card p-7">
+      <div className="flex items-center justify-between mb-5">
         <div className="skeleton h-4 w-32" />
         <div className="skeleton h-4 w-12" />
       </div>
@@ -25,9 +25,9 @@ const ResultsSkeleton = () => (
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {[1, 2, 3].map(i => (
-        <div key={i} className="card p-4 flex items-center gap-3">
-          <div className="skeleton w-8 h-8 rounded-md flex-shrink-0" />
-          <div className="flex-1 space-y-1.5">
+        <div key={i} className="card p-5 flex items-center gap-3">
+          <div className="skeleton w-9 h-9 rounded-xl flex-shrink-0" />
+          <div className="flex-1 space-y-2">
             <div className="skeleton h-3 w-3/4" />
             <div className="skeleton h-3 w-1/2" />
           </div>
@@ -44,6 +44,7 @@ const Results = () => {
   const [selectedArtifact, setSelectedArtifact] = useState(null)
   const [sseService] = useState(() => new SSEService())
   const [isLoading, setIsLoading] = useState(true)
+  const pollingIntervalRef = useRef(null)
   const [pollingInterval, setPollingInterval] = useState(null)
 
   const pollStatus = useCallback(async () => {
@@ -54,16 +55,20 @@ const Results = () => {
         const artifactsData = await getGenerationArtifacts(generationId)
         setArtifacts(artifactsData)
         if (artifactsData.length > 0 && !selectedArtifact) setSelectedArtifact(artifactsData[0])
-        if (pollingInterval) { clearInterval(pollingInterval); setPollingInterval(null) }
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current)
+          pollingIntervalRef.current = null
+          setPollingInterval(null)
+        }
       }
     } catch (error) { console.error('Error polling status:', error) }
-  }, [generationId, selectedArtifact, pollingInterval])
+  }, [generationId, selectedArtifact])
 
   useEffect(() => {
     if (generationId) initializeResults()
     return () => {
       sseService.disconnect()
-      if (pollingInterval) clearInterval(pollingInterval)
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generationId])
@@ -88,7 +93,9 @@ const Results = () => {
   }
 
   const startPolling = () => {
+    if (pollingIntervalRef.current) return
     const interval = setInterval(pollStatus, 2000)
+    pollingIntervalRef.current = interval
     setPollingInterval(interval)
   }
 
@@ -99,9 +106,9 @@ const Results = () => {
       sseService.on('agent_update', handleAgentUpdate)
       sseService.on('artifact_update', handleArtifactUpdate)
       sseService.on('message', handleGenericMessage)
-      sseService.on('error', () => { if (!pollingInterval) startPolling() })
+      sseService.on('error', () => { if (!pollingIntervalRef.current) startPolling() })
       sseService.on('close', () => {
-        if (status && ['running', 'started'].includes(status.status) && !pollingInterval) startPolling()
+        if (status && ['running', 'started'].includes(status.status) && !pollingIntervalRef.current) startPolling()
       })
     } catch { startPolling() }
   }
@@ -175,8 +182,8 @@ const Results = () => {
 
   if (isLoading) return (
     <div className="min-h-screen bg-surface">
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+      <div className="bg-white border-b border-neutral-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
           <div className="flex items-center gap-3">
             <div className="skeleton h-4 w-12" />
             <div className="skeleton h-4 w-px" />
@@ -184,7 +191,7 @@ const Results = () => {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <ResultsSkeleton />
       </div>
     </div>
@@ -195,18 +202,18 @@ const Results = () => {
   return (
     <div className="min-h-screen bg-surface">
       {/* Page header */}
-      <div className="bg-white border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+      <div className="bg-white border-b border-neutral-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <Link
                 to="/generate"
-                className="flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-900 transition-colors flex-shrink-0"
+                className="flex items-center gap-1.5 text-sm text-neutral-400 hover:text-neutral-900 transition-colors flex-shrink-0"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span className="hidden sm:inline">Back</span>
               </Link>
-              <span className="text-neutral-300 hidden sm:inline">|</span>
+              <span className="text-neutral-200 hidden sm:inline">|</span>
               <div className="min-w-0">
                 <h1 className="text-sm font-semibold text-neutral-900 truncate">
                   {isRunning ? 'Generation in Progress' : 'Generation Results'}
@@ -224,7 +231,7 @@ const Results = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
 
         {/* Progress bar when running */}
         <AnimatePresence>
@@ -233,9 +240,9 @@ const Results = () => {
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="card p-5 sm:p-6 mb-6"
+              className="card p-6 sm:p-7 mb-7"
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
                   <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
                   <span className="text-sm font-medium text-neutral-700">
@@ -248,7 +255,7 @@ const Results = () => {
                   {Math.round(status.progress || 0)}%
                 </span>
               </div>
-              <div className="progress-bar mb-3">
+              <div className="progress-bar mb-4">
                 <motion.div
                   className="progress-fill"
                   initial={{ width: 0 }}
@@ -269,9 +276,9 @@ const Results = () => {
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6"
+              className="mb-7"
             >
-              <h2 className="text-sm font-semibold text-neutral-700 mb-3">
+              <h2 className="text-sm font-semibold text-neutral-700 mb-4">
                 Generated Files ({artifacts.length})
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -285,7 +292,7 @@ const Results = () => {
                       transition={{ delay: index * 0.04 }}
                       className="card p-4 flex items-center gap-3"
                     >
-                      <div className="w-8 h-8 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-9 h-9 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
                         <Icon className="h-4 w-4 text-primary-600" />
                       </div>
                       <div className="min-w-0">
@@ -308,14 +315,14 @@ const Results = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-7"
           >
             <div className="lg:col-span-2">
               <E2BSandboxPreview artifacts={artifacts} generationId={generationId} />
             </div>
             <div className="space-y-5">
-              <div className="card p-5 sm:p-6">
-                <div className="flex items-center justify-between mb-5">
+              <div className="card p-6 sm:p-7">
+                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-sm font-semibold text-neutral-900">Generated Files</h2>
                   <span className="badge-neutral">{artifacts.length}</span>
                 </div>
@@ -327,14 +334,14 @@ const Results = () => {
                       <button
                         key={index}
                         onClick={() => setSelectedArtifact(artifact)}
-                        className={`w-full text-left p-3 rounded-xl border transition-all duration-150 ${
+                        className={`w-full text-left p-3 rounded-2xl border transition-all duration-150 ${
                           isSelected
-                            ? 'border-primary-600 bg-primary-50 ring-1 ring-primary-600'
+                            ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-400'
                             : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-primary-100' : 'bg-neutral-100'}`}>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-primary-100' : 'bg-neutral-100'}`}>
                             <Icon className={`h-3.5 w-3.5 ${isSelected ? 'text-primary-600' : 'text-neutral-500'}`} />
                           </div>
                           <div className="min-w-0">
@@ -348,9 +355,9 @@ const Results = () => {
                     )
                   })}
                 </div>
-                <div className="mt-5 pt-4 border-t border-neutral-100">
-                  <button className="btn-secondary w-full text-sm">
-                    <Download className="h-3.5 w-3.5 mr-2" />
+                <div className="mt-5 pt-5 border-t border-neutral-100">
+                  <button className="btn-secondary w-full text-sm gap-2">
+                    <Download className="h-3.5 w-3.5" />
                     Download All
                   </button>
                 </div>
@@ -378,13 +385,13 @@ const Results = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="card p-14 sm:p-20 text-center"
+            className="card p-16 sm:p-24 text-center"
           >
-            <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Bot className="h-8 w-8 text-neutral-400" />
             </div>
-            <h3 className="text-base font-semibold text-neutral-900 mb-2">No Artifacts Yet</h3>
-            <p className="text-sm text-neutral-500 mb-8 max-w-xs mx-auto leading-relaxed">
+            <h3 className="text-base font-semibold text-neutral-900 mb-2.5">No Artifacts Yet</h3>
+            <p className="text-sm text-neutral-500 mb-10 max-w-xs mx-auto leading-relaxed">
               {status?.status === 'failed'
                 ? 'The generation process encountered an error.'
                 : 'Artifacts will appear here once generation is complete.'}

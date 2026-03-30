@@ -198,11 +198,23 @@ class AgentOrchestrator:
             session.status = "running"
             session.update_progress(5, "Starting generation process...")
             
+            # Push initial SSE progress
+            from app.services.sse_manager import _push
+            await _push(session_id, {
+                "type": "progress_update",
+                "generation_id": session_id,
+                "status": "running",
+                "progress": 5,
+                "message": "Starting generation process...",
+            })
+
             # Execute MetaGPT generation
             result = await self.metagpt_executor.execute_generation(
                 request=request,
                 session_id=session_id,
-                progress_callback=lambda p, m: self._update_session_progress(session_id, p, m)
+                progress_callback=lambda p, m: asyncio.create_task(
+                    self._update_session_progress(session_id, p, m)
+                )
             )
             
             # Process artifacts
@@ -219,10 +231,23 @@ class AgentOrchestrator:
                     artifacts=processed_artifacts
                 )
                 session.workspace_path = Path(workspace_path)
+
+                # Push artifact updates via SSE
+                for artifact in processed_artifacts:
+                    await _push(session_id, {"type": "artifact_update", "artifact": artifact})
             
             # Mark session as completed
             session.status = "completed"
             session.update_progress(100, "Generation completed successfully")
+
+            await _push(session_id, {
+                "type": "progress_update",
+                "generation_id": session_id,
+                "status": "completed",
+                "progress": 100,
+                "message": "Generation completed successfully",
+            })
+            await _push(session_id, {"type": "stream_end"})
             
             # Update agent states
             for agent in session.agents:
@@ -234,6 +259,17 @@ class AgentOrchestrator:
             logger.error(f"Session {session_id} execution failed: {e}")
             session.status = "failed"
             session.update_progress(0, f"Generation failed: {str(e)}")
+
+            try:
+                from app.services.sse_manager import _push
+                await _push(session_id, {
+                    "type": "error",
+                    "generation_id": session_id,
+                    "message": str(e),
+                })
+                await _push(session_id, {"type": "stream_end"})
+            except Exception:
+                pass
             
             # Update agent states
             for agent in session.agents:
@@ -245,6 +281,17 @@ class AgentOrchestrator:
         if session:
             session.update_progress(progress, message)
             logger.debug(f"Session {session_id} progress: {progress}% - {message}")
+            try:
+                from app.services.sse_manager import _push
+                await _push(session_id, {
+                    "type": "progress_update",
+                    "generation_id": session_id,
+                    "status": session.status,
+                    "progress": progress,
+                    "message": message,
+                })
+            except Exception:
+                pass
     
     def _on_agent_state_change(self, agent, new_state, old_state=None):
         """Handle agent state changes"""
@@ -278,8 +325,12 @@ class AgentOrchestrator:
             'status': session.status,
             'progress': session.progress,
             'message': session.message,
-            'created_at': session.created_at.isoformat(),
-            'updated_at': session.updated_at.isoformat() if session.updated_at else None,
+            'created_at': session.created_at,
+            'updated_at': session.updated_at,
+            'current_agent': next(
+                (a.role.value for a in session.agents if a.state.value in ('executing', 'thinking')),
+                None
+            ),
             'agents': [
                 {
                     'id': agent.id,

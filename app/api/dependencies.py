@@ -98,7 +98,6 @@ def get_services() -> dict:
 
 def check_system_health(services: dict = Depends(get_services)) -> None:
     """Check system health before processing requests"""
-
     orchestrator = services['orchestrator']
     stats = orchestrator.get_statistics()
     active_sessions = stats.get('status_distribution', {}).get('running', 0)

@@ -140,6 +140,7 @@ class SessionStatus(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     estimated_completion: Optional[datetime] = None
+    current_agent: Optional[str] = None
     agents: List[Dict[str, Any]] = Field(default_factory=list)
     sandbox: Optional[Dict[str, Any]] = None
     metrics: Dict[str, Any] = Field(default_factory=dict)

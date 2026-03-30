@@ -13,8 +13,7 @@ from datetime import datetime
 from app.core.logging import get_logger
 from app.core.exceptions import MetaGPTException
 from app.core.config import settings
-from app.models.schemas import AgentRole, GenerationRequest, BedrockModel
-from .models import AgentTask, AgentInstance
+from app.models.schemas import AgentRole, GenerationRequest
 
 logger = get_logger(__name__)
 
@@ -95,10 +94,6 @@ class MetaGPTExecutor:
             logger.error(f"Failed to setup MetaGPT: {e}")
             raise MetaGPTException(f"MetaGPT setup failed: {e}")
     
-    def update_model(self, model: BedrockModel) -> None:
-        """Note: MetaGPT uses OpenAI/Anthropic API; Bedrock models are used via bedrock_client separately."""
-        logger.debug(f"Bedrock model {model.value} selected; MetaGPT continues using configured API provider")
-    
     async def execute_generation(
         self, 
         request: GenerationRequest, 
@@ -110,19 +105,20 @@ class MetaGPTExecutor:
             raise MetaGPTException(self._setup_error or "MetaGPT not configured")
         
         try:
-            # Update model if different from current
-            try:
-                if request.preferred_model != BedrockModel(settings.BEDROCK_MODEL):
-                    self.update_model(request.preferred_model)
-            except ValueError:
-                pass  # BEDROCK_MODEL env var doesn't match enum; proceed with request model
+            # Log the selected model (MetaGPT uses OpenAI/Anthropic; Bedrock model is informational)
+            logger.debug(f"Generation requested with Bedrock model: {request.preferred_model.value}")
             
             # Import MetaGPT (lazy import to avoid startup issues)
-            from metagpt.software_company import SoftwareCompany
-            from metagpt.roles import (
-                ProductManager, Architect, ProjectManager, 
-                Engineer, QaEngineer
-            )
+            try:
+                from metagpt.software_company import SoftwareCompany
+                from metagpt.roles import (
+                    ProductManager, Architect, ProjectManager,
+                    Engineer, QaEngineer
+                )
+            except ImportError as e:
+                raise MetaGPTException(
+                    f"MetaGPT package not installed. Run: pip install metagpt==0.8.1 --no-deps. Error: {e}"
+                )
             
             if progress_callback:
                 await progress_callback(10, "Initializing MetaGPT company...")
