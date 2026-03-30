@@ -28,10 +28,10 @@ class Settings(BaseSettings):
     # AWS
     AWS_ACCESS_KEY_ID: str = Field(default="")
     AWS_SECRET_ACCESS_KEY: str = Field(default="")
-    AWS_REGION: str = Field(default="us-west-2")
+    AWS_REGION: str = Field(default="us-east-1")
 
     # Bedrock
-    BEDROCK_REGION: str = Field(default="us-west-2")
+    BEDROCK_REGION: str = Field(default="us-east-1")
     BEDROCK_MODEL: str = Field(default="anthropic.claude-3-haiku-20240307-v1:0")  # Must match a BedrockModel enum value
 
     # MetaGPT

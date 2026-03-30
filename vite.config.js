@@ -36,7 +36,7 @@ export default defineConfig({
             if (id.includes('axios')) {
               return 'http'
             }
-            if (id.includes('react-markdown') || id.includes('react-syntax-highlighter')) {
+            if (id.includes('react-markdown')) {
               return 'markdown'
             }
             if (id.includes('react-hot-toast')) {

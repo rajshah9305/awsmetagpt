@@ -69,5 +69,3 @@ analyze_codebase.py
 # Verification screenshots (not needed in repo)
 verification/
 
-# API duplicate (Vercel entry point only)
-api/index.py

@@ -126,22 +126,28 @@ class MetaGPTExecutor:
             # Create software company
             company = SoftwareCompany()
             
-            # Map agent roles to MetaGPT roles
+            # Map agent roles to MetaGPT roles (DevOps maps to Engineer; MetaGPT has no DevOps role)
             role_mapping = {
                 AgentRole.PRODUCT_MANAGER: ProductManager,
                 AgentRole.ARCHITECT: Architect,
                 AgentRole.PROJECT_MANAGER: ProjectManager,
                 AgentRole.ENGINEER: Engineer,
-                AgentRole.QA_ENGINEER: QaEngineer
+                AgentRole.QA_ENGINEER: QaEngineer,
+                AgentRole.DEVOPS: Engineer,
             }
-            
-            # Hire agents based on request
-            team_roles = []
+            # One hire per MetaGPT role class to avoid duplicate agents when e.g. Engineer + DevOps
+            team_role_classes = []
+            seen_metagpt_classes = set()
             for role in request.active_agents:
-                if role in role_mapping:
-                    team_roles.append(role_mapping[role]())
-            
-            company.hire(team_roles)
+                if role not in role_mapping:
+                    continue
+                cls = role_mapping[role]
+                if cls in seen_metagpt_classes:
+                    continue
+                seen_metagpt_classes.add(cls)
+                team_role_classes.append(cls)
+
+            company.hire([cls() for cls in team_role_classes])
             
             if progress_callback:
                 await progress_callback(20, "Starting MetaGPT generation...")
@@ -293,7 +299,8 @@ Please generate a complete, production-ready application with:
             AgentRole.ARCHITECT,
             AgentRole.PROJECT_MANAGER,
             AgentRole.ENGINEER,
-            AgentRole.QA_ENGINEER
+            AgentRole.QA_ENGINEER,
+            AgentRole.DEVOPS,
         ]
     
     def validate_request(self, request: GenerationRequest) -> List[str]:

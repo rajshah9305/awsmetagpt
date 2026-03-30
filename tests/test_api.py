@@ -41,3 +41,4 @@ def test_get_agent_roles():
     role_ids = [r["id"] for r in data["roles"]]
     assert "product_manager" in role_ids
     assert "engineer" in role_ids
+    assert "devops" in role_ids

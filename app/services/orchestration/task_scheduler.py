@@ -3,7 +3,6 @@ Task scheduling and dependency management
 """
 
 from typing import Dict, List, Optional, Set
-import asyncio
 from datetime import datetime
 
 from app.core.logging import get_logger

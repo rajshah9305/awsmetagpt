@@ -22,9 +22,12 @@ class SystemLogger:
         if cls._configured:
             return
             
-        # Create logs directory
+        # Create logs directory when writable (skip on read-only / serverless)
         log_dir = Path("logs")
-        log_dir.mkdir(exist_ok=True)
+        try:
+            log_dir.mkdir(exist_ok=True)
+        except OSError:
+            log_dir = None
         
         # Configure root logger
         root_logger = logging.getLogger()
@@ -44,11 +47,14 @@ class SystemLogger:
         console_handler.setFormatter(formatter)
         root_logger.addHandler(console_handler)
         
-        # File handler (production only)
-        if settings.is_production():
-            file_handler = logging.FileHandler(log_dir / "app.log")
-            file_handler.setFormatter(formatter)
-            root_logger.addHandler(file_handler)
+        # File handler (production only, when logs dir exists)
+        if settings.is_production() and log_dir is not None:
+            try:
+                file_handler = logging.FileHandler(log_dir / "app.log")
+                file_handler.setFormatter(formatter)
+                root_logger.addHandler(file_handler)
+            except OSError:
+                pass
         
         cls._configured = True
     

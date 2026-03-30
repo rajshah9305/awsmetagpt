@@ -8,7 +8,7 @@ import {
   ChevronDown, AlertCircle, Cpu, Sparkles, RefreshCcw
 } from 'lucide-react'
 
-import { generateApp } from '../services/api'
+import { generateApp, getModels, getAgentRoles } from '../services/api'
 
 const STATIC_MODELS = [
   { id: 'anthropic.claude-3-haiku-20240307-v1:0',   name: 'Claude 3 Haiku',   provider: 'Anthropic' },
@@ -94,12 +94,33 @@ const Generator = () => {
     setIsLoadingData(true)
     setLoadError(null)
     try {
-      setModels(STATIC_MODELS)
-      setAgentRoles(STATIC_ROLES)
-      setFormData(prev => ({
+      let modelsList = STATIC_MODELS
+      let rolesList = STATIC_ROLES
+      try {
+        const [modelsRes, rolesRes] = await Promise.all([getModels(), getAgentRoles()])
+        if (modelsRes?.models?.length) {
+          modelsList = modelsRes.models.map((m) => ({
+            id: m.id,
+            name: m.name,
+            provider: m.provider,
+          }))
+        }
+        if (rolesRes?.roles?.length) {
+          rolesList = rolesRes.roles.map((r) => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+          }))
+        }
+      } catch {
+        /* offline or API unavailable — static lists match backend enums */
+      }
+      setModels(modelsList)
+      setAgentRoles(rolesList)
+      setFormData((prev) => ({
         ...prev,
-        preferred_model: STATIC_MODELS[0].id,
-        active_agents: STATIC_ROLES.map(r => r.id),
+        preferred_model: modelsList[0]?.id ?? '',
+        active_agents: rolesList.map((r) => r.id),
       }))
     } catch (err) {
       const msg = typeof err === 'string'
