@@ -8,7 +8,26 @@ import {
   ChevronDown, AlertCircle, Cpu, Sparkles, RefreshCcw
 } from 'lucide-react'
 
-import { generateApp, getModels, getAgentRoles } from '../services/api'
+import { generateApp } from '../services/api'
+
+const STATIC_MODELS = [
+  { id: 'anthropic.claude-3-haiku-20240307-v1:0',   name: 'Claude 3 Haiku',   provider: 'Anthropic' },
+  { id: 'anthropic.claude-3-sonnet-20240229-v1:0',  name: 'Claude 3 Sonnet',  provider: 'Anthropic' },
+  { id: 'anthropic.claude-3-5-sonnet-20240620-v1:0',name: 'Claude 3.5 Sonnet',provider: 'Anthropic' },
+  { id: 'meta.llama3-8b-instruct-v1:0',             name: 'Llama 3 8B',       provider: 'Meta' },
+  { id: 'meta.llama3-70b-instruct-v1:0',            name: 'Llama 3 70B',      provider: 'Meta' },
+  { id: 'mistral.mistral-7b-instruct-v0:2',         name: 'Mistral 7B',       provider: 'Mistral AI' },
+  { id: 'mistral.mistral-large-2402-v1:0',          name: 'Mistral Large',    provider: 'Mistral AI' },
+]
+
+const STATIC_ROLES = [
+  { id: 'product_manager', name: 'Product Manager',  description: 'Analyzes requirements, creates user stories, and defines product specifications' },
+  { id: 'architect',       name: 'System Architect',  description: 'Designs system architecture, selects tech stack, and creates technical specifications' },
+  { id: 'project_manager', name: 'Project Manager',   description: 'Creates project plans, manages timelines, and coordinates development activities' },
+  { id: 'engineer',        name: 'Software Engineer', description: 'Implements application code following architecture and best practices' },
+  { id: 'qa_engineer',     name: 'QA Engineer',       description: 'Creates test strategies, writes test cases, and ensures quality standards' },
+  { id: 'devops',          name: 'DevOps Engineer',   description: 'Designs infrastructure, CI/CD pipelines, and deployment configurations' },
+]
 
 const AGENT_ICONS = {
   product_manager: Briefcase,
@@ -75,23 +94,18 @@ const Generator = () => {
     setIsLoadingData(true)
     setLoadError(null)
     try {
-      const [modelsData, rolesData] = await Promise.all([getModels(), getAgentRoles()])
-      const fetchedModels = modelsData.models ?? []
-      const fetchedRoles  = rolesData.roles  ?? []
-      if (!fetchedModels.length) throw new Error('No models returned from server')
-      if (!fetchedRoles.length)  throw new Error('No agent roles returned from server')
-      setModels(fetchedModels)
-      setAgentRoles(fetchedRoles)
+      setModels(STATIC_MODELS)
+      setAgentRoles(STATIC_ROLES)
       setFormData(prev => ({
         ...prev,
-        preferred_model: fetchedModels[0]?.id ?? '',
-        active_agents:   fetchedRoles.map(r => r.id),
+        preferred_model: STATIC_MODELS[0].id,
+        active_agents: STATIC_ROLES.map(r => r.id),
       }))
     } catch (err) {
       const msg = typeof err === 'string'
         ? err
-        : err?.message || err?.detail || 'Failed to load configuration from server'
-      setLoadError(typeof msg === 'string' ? msg : 'Failed to load configuration from server')
+        : err?.message || err?.detail || 'Failed to load configuration'
+      setLoadError(typeof msg === 'string' ? msg : 'Failed to load configuration')
     } finally {
       setIsLoadingData(false)
     }
