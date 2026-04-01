@@ -47,7 +47,7 @@ class MetaGPTExecutor:
     
     def __init__(self):
         self.metagpt_configured = False
-        self._setup_error: Optional[str] = None
+        self._setup_error: Optional[str] = "Initialization not started"
         try:
             self._setup_metagpt()
         except MetaGPTException as e:
@@ -117,11 +117,18 @@ class MetaGPTExecutor:
             workspace_path.mkdir(parents=True, exist_ok=True)
             
             self.metagpt_configured = True
+            self._setup_error = None
             logger.info(f"✅ MetaGPT configured with {api_type} API and model: {model}")
             
+        except MetaGPTException as e:
+            self.metagpt_configured = False
+            self._setup_error = str(e)
+            logger.warning(f"MetaGPT configuration incomplete: {e}")
+            # Don't re-raise, we want the server to start but generation to fail gracefully
         except Exception as e:
+            self.metagpt_configured = False
+            self._setup_error = f"MetaGPT setup failed: {e}"
             logger.error(f"Failed to setup MetaGPT: {e}")
-            raise MetaGPTException(f"MetaGPT setup failed: {e}")
 
     def _run_metagpt_team_blocking(
         self,
@@ -428,7 +435,7 @@ Please generate a complete, production-ready application with:
         if not self.metagpt_configured:
             errors.append(
                 self._setup_error
-                or "MetaGPT is not configured. Set OPENAI_API_KEY or ANTHROPIC_API_KEY in .env and restart."
+                or "MetaGPT is not configured. MetaGPT agents require a direct API key (OPENAI_API_KEY or ANTHROPIC_API_KEY). AWS Bedrock credentials are not sufficient for MetaGPT agents in this version."
             )
         
         # Validate agent roles
