@@ -336,8 +336,8 @@ async def health_check(services: dict = Depends(get_services)):
             service="MetaGPT + E2B Integration System",
             timestamp=datetime.now(),
             aws_bedrock_available=bedrock_available,
-            metagpt_configured=True,  # Assume configured if we got this far
-            e2b_configured=True,      # Assume configured if we got this far
+            metagpt_configured=orchestrator.metagpt_executor.metagpt_configured,  # Assume configured if we got this far
+            e2b_configured=bool(settings.E2B_API_KEY),      # Assume configured if we got this far
             services={
                 "orchestrator": orchestrator_stats,
                 "e2b": e2b_stats
