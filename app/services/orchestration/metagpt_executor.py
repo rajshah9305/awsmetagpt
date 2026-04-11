@@ -59,7 +59,9 @@ class MetaGPTExecutor:
         """Initialize MetaGPT with proper configuration"""
         try:
             # Create MetaGPT config directory
-            config_dir = Path.home() / ".metagpt"
+            config_dir = Path(settings.METAGPT_CONFIG_DIR)
+            if not config_dir.is_absolute():
+                config_dir = Path.cwd() / config_dir
             config_dir.mkdir(parents=True, exist_ok=True)
             
             # Determine which API to use for MetaGPT
@@ -105,6 +107,7 @@ class MetaGPTExecutor:
                 yaml.dump(metagpt_config, f, default_flow_style=False)
             
             # Set environment variables for MetaGPT
+            os.environ["METAGPT_CONFIG_PATH"] = str(config_dir / "config2.yaml")
             if api_type == "openai" and api_key != "dummy-key-for-development":
                 os.environ['OPENAI_API_KEY'] = api_key
             elif api_type == "anthropic":

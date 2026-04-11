@@ -36,6 +36,7 @@ class Settings(BaseSettings):
 
     # MetaGPT
     METAGPT_WORKSPACE: str = Field(default="./workspace")
+    METAGPT_CONFIG_DIR: str = Field(default="./metagpt_config")
     OPENAI_API_KEY: str = Field(default="")
     ANTHROPIC_API_KEY: str = Field(default="")
 
@@ -80,6 +81,7 @@ class Settings(BaseSettings):
     def get_metagpt_env_vars(self) -> Dict[str, str]:
         env: Dict[str, str] = {
             "METAGPT_WORKSPACE": self.METAGPT_WORKSPACE,
+            "METAGPT_CONFIG_PATH": os.path.join(self.METAGPT_CONFIG_DIR, "config2.yaml"),
         }
         if self.OPENAI_API_KEY:
             env["OPENAI_API_KEY"] = self.OPENAI_API_KEY
