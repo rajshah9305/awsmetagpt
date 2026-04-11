@@ -108,6 +108,7 @@ class MetaGPTExecutor:
             
             # Set environment variables for MetaGPT
             os.environ["METAGPT_CONFIG_PATH"] = str(config_dir / "config2.yaml")
+            os.environ["METAGPT_WORKSPACE"] = settings.METAGPT_WORKSPACE
             if api_type == "openai" and api_key != "dummy-key-for-development":
                 os.environ['OPENAI_API_KEY'] = api_key
             elif api_type == "anthropic":

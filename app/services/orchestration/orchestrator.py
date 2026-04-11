@@ -73,7 +73,7 @@ class AgentOrchestrator:
                 id=session_id,
                 status="initializing",
                 client_id=client_id,
-                workspace_path=Path(f"./workspace/{session_id}")
+                workspace_path=Path(settings.METAGPT_WORKSPACE) / session_id
             )
             
             # Create agents for selected roles
