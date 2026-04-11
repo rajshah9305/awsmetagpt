@@ -1,0 +1,1 @@
+# MetaGPT + AWS Bedrock App Generator
