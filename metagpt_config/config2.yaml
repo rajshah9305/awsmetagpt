@@ -1,0 +1,6 @@
+llm:
+  api_key: sk-abcdefghijklmnopqrstuvwxyz0123456789
+  api_type: openai
+  max_tokens: 4000
+  model: gpt-4
+  temperature: 0.7

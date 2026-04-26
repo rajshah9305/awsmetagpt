@@ -12,6 +12,7 @@ from app.core.logging import get_logger
 from app.core.exceptions import OrchestrationException, SessionException
 from app.models.schemas import GenerationRequest, AgentRole
 from .models import OrchestrationSession, AgentTask, TaskPriority, AgentState
+from app.core.config import settings
 from .task_scheduler import TaskScheduler
 from .agent_state_manager import AgentStateManager
 from .metagpt_executor import MetaGPTExecutor
