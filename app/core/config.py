@@ -35,8 +35,8 @@ class Settings(BaseSettings):
     BEDROCK_MODEL: str = Field(default="anthropic.claude-3-haiku-20240307-v1:0")  # Must match a BedrockModel enum value
 
     # MetaGPT
-    METAGPT_WORKSPACE: str = Field(default="./workspace")
-    METAGPT_CONFIG_DIR: str = Field(default="./metagpt_config")
+    METAGPT_WORKSPACE: str = Field(default_factory=lambda: "/tmp/metagpt_workspace" if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") else "./workspace")
+    METAGPT_CONFIG_DIR: str = Field(default_factory=lambda: "/tmp/metagpt_config" if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME") else "./metagpt_config")
     OPENAI_API_KEY: str = Field(default="")
     ANTHROPIC_API_KEY: str = Field(default="")
 
