@@ -1,5 +1,5 @@
 llm:
-  api_key: sk-abcdefghijklmnopqrstuvwxyz0123456789
+  api_key: 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
   api_type: openai
   max_tokens: 4000
   model: gpt-4
